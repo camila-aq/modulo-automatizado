@@ -24,7 +24,7 @@ Los cambios se implementan primero en `develop` y se integran en `main` cuando r
 Los commits utilizan la siguiente estructura:
 
 ```text
-tipo(scope): resumen breve en español
+tipo: resumen breve en español
 ```
 
 El resumen debe ser breve y describir claramente el cambio realizado.
