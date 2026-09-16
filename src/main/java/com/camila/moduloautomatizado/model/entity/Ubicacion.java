@@ -13,13 +13,13 @@ public class Ubicacion {
     @Column(name = "id_ubicacion")
     private Integer idUbicacion;
 
-    @Column(name = "nombre", length = 150)
+    @Column(name = "nombre", nullable = false, length = 150)
     private String nombre;
 
-    @Column(name = "activo")
+    @Column(name = "activo", nullable = false)
     private Boolean activo;
 
-    @Column(name = "fecha_creacion")
+    @Column(name = "fecha_creacion", nullable = false)
     private LocalDateTime fechaCreacion;
 
     @ManyToOne(fetch = FetchType.LAZY)

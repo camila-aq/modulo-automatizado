@@ -15,21 +15,21 @@ public class ReservaUsuario {
     private Integer idReservaUsuario;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_usuario")
+    @JoinColumn(name = "id_usuario", nullable = false)
     private Usuario usuario;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_reserva")
+    @JoinColumn(name = "id_reserva", nullable = false)
     private Reserva reserva;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "rol_en_reserva")
+    @Column(name = "rol_en_reserva", nullable = false, length = 20)
     private RolEnReserva rolEnReserva;
 
-    @Column(name = "activo")
+    @Column(name = "activo", nullable = false)
     private Boolean activo;
 
-    @Column(name = "fecha_creacion")
+    @Column(name = "fecha_creacion", nullable = false)
     private LocalDateTime fechaCreacion;
 
     @ManyToOne(fetch = FetchType.LAZY)

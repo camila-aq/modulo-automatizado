@@ -16,25 +16,25 @@ public class ValidacionIngreso {
     private Integer idValidacion;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_punto_validacion")
+    @JoinColumn(name = "id_punto_validacion", nullable = false)
     private PuntoValidacion puntoValidacion;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_reserva_usuario", unique = true)
+    @JoinColumn(name = "id_reserva_usuario", nullable = false, unique = true)
     private ReservaUsuario reservaUsuario;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "medio_validacion")
+    @Column(name = "medio_validacion", nullable = false, length = 20)
     private MedioValidacion medioValidacion;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "tipo_identificador")
+    @Column(name = "tipo_identificador", nullable = false, length = 30)
     private TipoIdentificador tipoIdentificador;
 
-    @Column(name = "fecha_hora_validacion")
+    @Column(name = "fecha_hora_validacion", nullable = false)
     private LocalDateTime fechaHoraValidacion;
 
-    @Column(name = "fecha_creacion")
+    @Column(name = "fecha_creacion", nullable = false)
     private LocalDateTime fechaCreacion;
 
     @ManyToOne(fetch = FetchType.LAZY)

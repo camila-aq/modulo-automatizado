@@ -14,21 +14,28 @@ public class ControlOcupacion {
     private Integer idControl;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_reserva", unique = true)
+    @JoinColumn( name = "id_reserva", nullable = false, unique = true)
     private Reserva reserva;
 
-    @Column(name = "fecha_hora_inicio_control")
+    @Column(name = "fecha_hora_inicio_control", nullable = false)
     private LocalDateTime fechaHoraInicioControl;
 
-    @Column(name = "fecha_hora_limite_tolerancia")
+    @Column(name = "fecha_hora_limite_tolerancia", nullable = false)
     private LocalDateTime fechaHoraLimiteTolerancia;
 
-    @Column(name = "fecha_creacion")
+    @Column(name = "fecha_creacion", nullable = false)
     private LocalDateTime fechaCreacion;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_usuario_creacion")
     private Usuario usuarioCreacion;
+
+    @Column(name = "fecha_modificacion")
+    private LocalDateTime fechaModificacion;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_usuario_modificacion")
+    private Usuario usuarioModificacion;
 
     public ControlOcupacion() {
     }
@@ -61,7 +68,8 @@ public class ControlOcupacion {
         return fechaHoraLimiteTolerancia;
     }
 
-    public void setFechaHoraLimiteTolerancia(LocalDateTime fechaHoraLimiteTolerancia) {
+    public void setFechaHoraLimiteTolerancia(
+            LocalDateTime fechaHoraLimiteTolerancia) {
         this.fechaHoraLimiteTolerancia = fechaHoraLimiteTolerancia;
     }
 
@@ -79,5 +87,21 @@ public class ControlOcupacion {
 
     public void setUsuarioCreacion(Usuario usuarioCreacion) {
         this.usuarioCreacion = usuarioCreacion;
+    }
+
+    public LocalDateTime getFechaModificacion() {
+        return fechaModificacion;
+    }
+
+    public void setFechaModificacion(LocalDateTime fechaModificacion) {
+        this.fechaModificacion = fechaModificacion;
+    }
+
+    public Usuario getUsuarioModificacion() {
+        return usuarioModificacion;
+    }
+
+    public void setUsuarioModificacion(Usuario usuarioModificacion) {
+        this.usuarioModificacion = usuarioModificacion;
     }
 }

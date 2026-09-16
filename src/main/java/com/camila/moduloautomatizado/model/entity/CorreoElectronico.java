@@ -15,24 +15,24 @@ public class CorreoElectronico {
     private Integer idCorreo;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_reserva")
+    @JoinColumn(name = "id_reserva", nullable = false)
     private Reserva reserva;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_usuario_destinatario")
+    @JoinColumn(name = "id_usuario_destinatario", nullable = false)
     private Usuario usuarioDestinatario;
 
-    @Column(name = "correo_destino", length = 150)
-    private String correoDestino;
-
     @Enumerated(EnumType.STRING)
-    @Column(name = "tipo_correo")
+    @Column(name = "tipo_correo", nullable = false, length = 30)
     private TipoCorreo tipoCorreo;
 
-    @Column(name = "fecha_envio")
+    @Column(name = "correo_destino", nullable = false, length = 150)
+    private String correoDestino;
+
+    @Column(name = "fecha_envio", nullable = false)
     private LocalDateTime fechaEnvio;
 
-    @Column(name = "fecha_creacion")
+    @Column(name = "fecha_creacion", nullable = false)
     private LocalDateTime fechaCreacion;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -66,20 +66,20 @@ public class CorreoElectronico {
         this.usuarioDestinatario = usuarioDestinatario;
     }
 
-    public String getCorreoDestino() {
-        return correoDestino;
-    }
-
-    public void setCorreoDestino(String correoDestino) {
-        this.correoDestino = correoDestino;
-    }
-
     public TipoCorreo getTipoCorreo() {
         return tipoCorreo;
     }
 
     public void setTipoCorreo(TipoCorreo tipoCorreo) {
         this.tipoCorreo = tipoCorreo;
+    }
+
+    public String getCorreoDestino() {
+        return correoDestino;
+    }
+
+    public void setCorreoDestino(String correoDestino) {
+        this.correoDestino = correoDestino;
     }
 
     public LocalDateTime getFechaEnvio() {

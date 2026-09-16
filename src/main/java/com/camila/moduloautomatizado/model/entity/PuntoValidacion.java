@@ -14,16 +14,16 @@ public class PuntoValidacion {
     private Integer idPuntoValidacion;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_ambiente", unique = true)
+    @JoinColumn(name = "id_ambiente", nullable = false, unique = true)
     private Ambiente ambiente;
 
-    @Column(name = "codigo_punto", length = 20, unique = true)
+    @Column(name = "codigo_punto", nullable = false, length = 20, unique = true)
     private String codigoPunto;
 
-    @Column(name = "activo")
+    @Column(name = "activo", nullable = false)
     private Boolean activo;
 
-    @Column(name = "fecha_creacion")
+    @Column(name = "fecha_creacion", nullable = false)
     private LocalDateTime fechaCreacion;
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -15,20 +15,20 @@ public class OcupacionEstado {
     private Integer idOcupacionEstado;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_control")
+    @JoinColumn(name = "id_control", nullable = false)
     private ControlOcupacion controlOcupacion;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "estado_ocupacion")
+    @Column(name = "estado_ocupacion", nullable = false, length = 20)
     private EstadoOcupacion estadoOcupacion;
 
     @Column(name = "motivo", length = 150)
     private String motivo;
 
-    @Column(name = "fecha_hora_estado")
+    @Column(name = "fecha_hora_estado", nullable = false)
     private LocalDateTime fechaHoraEstado;
 
-    @Column(name = "fecha_creacion")
+    @Column(name = "fecha_creacion", nullable = false)
     private LocalDateTime fechaCreacion;
 
     @ManyToOne(fetch = FetchType.LAZY)

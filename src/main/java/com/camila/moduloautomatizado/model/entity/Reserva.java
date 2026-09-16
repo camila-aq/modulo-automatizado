@@ -14,22 +14,22 @@ public class Reserva {
     private Integer idReserva;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_ambiente")
+    @JoinColumn(name = "id_ambiente", nullable = false)
     private Ambiente ambiente;
 
-    @Column(name = "codigo_reserva", length = 20, unique = true)
+    @Column(name = "codigo_reserva", nullable = false, length = 20, unique = true)
     private String codigoReserva;
 
-    @Column(name = "fecha_hora_inicio")
+    @Column(name = "fecha_hora_inicio", nullable = false)
     private LocalDateTime fechaHoraInicio;
 
-    @Column(name = "fecha_hora_fin")
+    @Column(name = "fecha_hora_fin", nullable = false)
     private LocalDateTime fechaHoraFin;
 
-    @Column(name = "tolerancia_minutos")
+    @Column(name = "tolerancia_minutos", nullable = false)
     private Integer toleranciaMinutos;
 
-    @Column(name = "fecha_creacion")
+    @Column(name = "fecha_creacion", nullable = false)
     private LocalDateTime fechaCreacion;
 
     @ManyToOne(fetch = FetchType.LAZY)

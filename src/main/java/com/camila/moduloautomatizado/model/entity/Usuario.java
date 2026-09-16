@@ -14,29 +14,29 @@ public class Usuario {
     @Column(name = "id_usuario")
     private Integer idUsuario;
 
-    @Column(name = "codigo_universitario", length = 20, unique = true)
+    @Column(name = "codigo_universitario", nullable = false, length = 10, unique = true)
     private String codigoUniversitario;
 
-    @Column(name = "dni", length = 8, unique = true)
+    @Column(name = "dni", nullable = false, length = 8, unique = true)
     private String dni;
 
-    @Column(name = "nombres", length = 150)
+    @Column(name = "nombres", nullable = false, length = 150)
     private String nombres;
 
-    @Column(name = "apellidos", length = 150)
+    @Column(name = "apellidos", nullable = false, length = 150)
     private String apellidos;
 
-    @Column(name = "correo", length = 100)
+    @Column(name = "correo", nullable = false, length = 100)
     private String correo;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "rol_usuario")
+    @Column(name = "rol_usuario", nullable = false, length = 20)
     private RolUsuario rolUsuario;
 
-    @Column(name = "activo")
+    @Column(name = "activo", nullable = false)
     private Boolean activo;
 
-    @Column(name = "fecha_creacion")
+    @Column(name = "fecha_creacion", nullable = false)
     private LocalDateTime fechaCreacion;
 
     @ManyToOne(fetch = FetchType.LAZY)

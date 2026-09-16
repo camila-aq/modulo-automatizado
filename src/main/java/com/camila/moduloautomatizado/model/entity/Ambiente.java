@@ -14,31 +14,31 @@ public class Ambiente {
     private Integer idAmbiente;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_ubicacion")
+    @JoinColumn(name = "id_ubicacion", nullable = false)
     private Ubicacion ubicacion;
 
-    @Column(name = "codigo", length = 20)
+    @Column(name = "codigo", nullable = false, length = 20)
     private String codigo;
 
-    @Column(name = "nombre", length = 100)
+    @Column(name = "nombre", nullable = false, length = 100)
     private String nombre;
 
-    @Column(name = "abreviatura", length = 20)
+    @Column(name = "abreviatura", nullable = false, length = 20)
     private String abreviatura;
 
-    @Column(name = "piso", length = 20)
+    @Column(name = "piso", nullable = false, length = 10)
     private String piso;
 
-    @Column(name = "cantidad_minima")
+    @Column(name = "cantidad_minima", nullable = false)
     private Integer cantidadMinima;
 
-    @Column(name = "cantidad_maxima")
+    @Column(name = "cantidad_maxima", nullable = false)
     private Integer cantidadMaxima;
 
-    @Column(name = "activo")
+    @Column(name = "activo", nullable = false)
     private Boolean activo;
 
-    @Column(name = "fecha_creacion")
+    @Column(name = "fecha_creacion", nullable = false)
     private LocalDateTime fechaCreacion;
 
     @ManyToOne(fetch = FetchType.LAZY)

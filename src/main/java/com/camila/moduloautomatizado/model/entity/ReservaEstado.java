@@ -15,20 +15,20 @@ public class ReservaEstado {
     private Integer idReservaEstado;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_reserva")
+    @JoinColumn(name = "id_reserva", nullable = false)
     private Reserva reserva;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "estado_reserva")
+    @Column(name = "estado_reserva", nullable = false, length = 20)
     private EstadoReserva estadoReserva;
 
     @Column(name = "motivo", length = 150)
     private String motivo;
 
-    @Column(name = "fecha_hora_estado")
+    @Column(name = "fecha_hora_estado", nullable = false)
     private LocalDateTime fechaHoraEstado;
 
-    @Column(name = "fecha_creacion")
+    @Column(name = "fecha_creacion", nullable = false)
     private LocalDateTime fechaCreacion;
 
     @ManyToOne(fetch = FetchType.LAZY)
