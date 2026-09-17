@@ -9,4 +9,6 @@ import java.util.Optional;
 public interface ReservaEstadoRepository extends JpaRepository<ReservaEstado, Integer> {
 
     Optional<ReservaEstado> findTopByReservaOrderByFechaHoraEstadoDesc(Reserva reserva);
+
+    boolean existsByReserva(Reserva reserva);
 }
