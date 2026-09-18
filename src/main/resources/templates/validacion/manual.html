@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Validación de ingreso</title>
+
+    <link rel="stylesheet"
+          th:href="@{/css/base.css}">
+
+    <link rel="stylesheet"
+          th:href="@{/css/validacion-manual.css}">
+</head>
+
+<body>
+
+<!--
+    Espacio superior intencionalmente vacío.
+    No se utilizarán logos institucionales.
+-->
+<header class="encabezado-vacio">
+</header>
+
+<main class="contenedor-principal">
+
+    <div th:replace="~{fragments/menu-administrador :: menuAdministrador}">
+    </div>
+
+    <section class="cabecera-pagina">
+
+        <h1>
+            Gestión de reservas de ambientes de estudio
+        </h1>
+
+        <p>
+            Validación manual de ingreso
+        </p>
+
+    </section>
+
+    <section class="panel">
+
+        <div class="panel-titulo">
+            Identificación del usuario
+        </div>
+
+        <div class="panel-contenido">
+
+            <p class="texto-ayuda">
+                Ingrese el DNI o el código universitario del usuario.
+            </p>
+
+            <div class="formulario-identificacion">
+
+                <div class="campo-formulario">
+
+                    <label for="dni">
+                        DNI
+                    </label>
+
+                    <input
+                            id="dni"
+                            name="dni"
+                            type="text"
+                            maxlength="8"
+                            autocomplete="off"
+                            placeholder="Ingrese DNI">
+
+                </div>
+
+                <div class="separador-identificador">
+                    o
+                </div>
+
+                <div class="campo-formulario">
+
+                    <label for="codigoUniversitario">
+                        Código universitario
+                    </label>
+
+                    <input
+                            id="codigoUniversitario"
+                            name="codigoUniversitario"
+                            type="text"
+                            maxlength="20"
+                            autocomplete="off"
+                            placeholder="Ingrese código">
+
+                </div>
+
+            </div>
+
+            <div class="usuario-identificado"
+                 id="usuarioIdentificado">
+
+                <span class="usuario-etiqueta">
+                    Usuario:
+                </span>
+
+                <span id="nombreUsuario">
+                    —
+                </span>
+
+            </div>
+
+            <div class="acciones-formulario">
+
+                <button
+                        id="botonBuscarReserva"
+                        class="boton boton-primario"
+                        type="button"
+                        disabled>
+
+                    Buscar reserva
+
+                </button>
+
+                <button
+                        id="botonLimpiar"
+                        class="boton boton-secundario"
+                        type="button">
+
+                    Limpiar
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <div id="mensaje"
+         class="mensaje"
+         hidden>
+    </div>
+
+</main>
+
+</body>
+</html>

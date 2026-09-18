@@ -1,0 +1,92 @@
+.texto-ayuda {
+    margin-top: 0;
+    margin-bottom: 22px;
+    color: #555555;
+}
+
+.formulario-identificacion {
+    display: flex;
+    align-items: flex-end;
+    gap: 18px;
+}
+
+.campo-formulario {
+    display: flex;
+    flex-direction: column;
+    width: 310px;
+}
+
+.campo-formulario label {
+    margin-bottom: 7px;
+    font-weight: 600;
+}
+
+.campo-formulario input {
+    width: 100%;
+    height: 36px;
+    padding: 7px 10px;
+    border: 1px solid #bcbcbc;
+    background: #ffffff;
+    font-size: 14px;
+}
+
+.campo-formulario input:focus {
+    outline: 2px solid #d8d8d8;
+    border-color: #777777;
+}
+
+.separador-identificador {
+    padding-bottom: 9px;
+    color: #777777;
+}
+
+.usuario-identificado {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    margin-top: 24px;
+    padding: 10px 12px;
+    border: 1px solid #d4d4d4;
+    background: #fafafa;
+}
+
+.usuario-etiqueta {
+    margin-right: 8px;
+    font-weight: 600;
+}
+
+.acciones-formulario {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+@media (max-width: 760px) {
+
+    .formulario-identificacion {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .campo-formulario {
+        width: 100%;
+    }
+
+    .separador-identificador {
+        padding: 0;
+        text-align: center;
+    }
+
+    .contenedor-principal {
+        width: calc(100% - 30px);
+    }
+
+    .menu-administrador {
+        justify-content: stretch;
+    }
+
+    .menu-boton {
+        flex: 1;
+        min-width: auto;
+    }
+}

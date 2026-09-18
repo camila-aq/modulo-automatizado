@@ -1,0 +1,132 @@
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    color: #333333;
+    background: #ffffff;
+}
+
+.encabezado-vacio {
+    width: 100%;
+    height: 72px;
+    background: #ffffff;
+}
+
+.contenedor-principal {
+    width: calc(100% - 80px);
+    max-width: 1280px;
+    margin: 0 auto;
+    padding-bottom: 40px;
+}
+
+.menu-administrador {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 28px;
+}
+
+.menu-boton {
+    min-width: 145px;
+    padding: 10px 18px;
+    border: 1px solid #bdbdbd;
+    border-left: none;
+    background: #f5f5f5;
+    color: #333333;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.menu-boton:first-child {
+    border-left: 1px solid #bdbdbd;
+}
+
+.menu-boton:hover {
+    background: #e9e9e9;
+}
+
+.menu-boton-activo {
+    font-weight: 600;
+    background: #eeeeee;
+}
+
+.cabecera-pagina {
+    margin-bottom: 22px;
+    border-bottom: 1px solid #d4d4d4;
+    padding-bottom: 12px;
+}
+
+.cabecera-pagina h1 {
+    margin: 0 0 7px;
+    font-size: 21px;
+    font-weight: 600;
+}
+
+.cabecera-pagina p {
+    margin: 0;
+    color: #666666;
+}
+
+.panel {
+    width: 100%;
+    border: 1px solid #cfcfcf;
+    background: #ffffff;
+}
+
+.panel-titulo {
+    padding: 10px 14px;
+    border-bottom: 1px solid #cfcfcf;
+    background: #eeeeee;
+    font-weight: 600;
+}
+
+.panel-contenido {
+    padding: 24px;
+}
+
+.boton {
+    min-width: 110px;
+    padding: 8px 16px;
+    border: 1px solid transparent;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.boton:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.boton-primario {
+    border-color: #555555;
+    background: #555555;
+    color: white;
+}
+
+.boton-primario:hover:not(:disabled) {
+    background: #444444;
+}
+
+.boton-secundario {
+    border-color: #b5b5b5;
+    background: #f5f5f5;
+    color: #333333;
+}
+
+.boton-secundario:hover {
+    background: #e9e9e9;
+}
+
+.mensaje {
+    margin-top: 16px;
+    padding: 12px 15px;
+    border: 1px solid #c9c9c9;
+}
