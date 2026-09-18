@@ -10,6 +10,7 @@ import com.camila.moduloautomatizado.dto.ConfirmarValidacionManualRequest;
 import com.camila.moduloautomatizado.dto.ValidacionIngresoResponse;
 import com.camila.moduloautomatizado.dto.UsuarioIdentificadoResponse;
 import com.camila.moduloautomatizado.dto.ValidarIngresoEscaneoRequest;
+import com.camila.moduloautomatizado.dto.DetalleReservaManualResponse;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -199,4 +200,48 @@ public class ValidacionIngresoController {
                         .getCodigoPunto()
         );
     }
+
+    @GetMapping("/manual/detalle")
+    public DetalleReservaManualResponse obtenerDetalleReservaManual(
+            @RequestParam TipoIdentificador tipo,
+            @RequestParam String valor) {
+
+        Usuario usuario;
+
+        if (tipo == TipoIdentificador.DNI) {
+
+            usuario =
+                    validacionIngresoService
+                            .identificarUsuarioPorDni(
+                                    valor
+                            );
+
+        } else if (tipo == TipoIdentificador.CODIGO_UNIVERSITARIO) {
+
+            usuario =
+                    validacionIngresoService
+                            .identificarUsuarioPorCodigoUniversitario(
+                                    valor
+                            );
+
+        } else {
+
+            throw new IllegalArgumentException(
+                    "El tipo de identificador no es válido."
+            );
+        }
+
+        ReservaUsuario reservaUsuario =
+                validacionIngresoService
+                        .buscarReservaVigenteParaValidacionManual(
+                                usuario
+                        );
+
+        return validacionIngresoService
+                .obtenerDetalleReservaManual(
+                        reservaUsuario
+                );
+    }
+
+
 }

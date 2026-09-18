@@ -21,6 +21,9 @@
 
     <link rel="stylesheet"
           th:href="@{/css/detalle-ambiente.css}">
+
+    <link rel="stylesheet"
+          th:href="@{/css/componentes.css}">
 </head>
 
 <body>
@@ -151,15 +154,22 @@
 
     </section>
 
+    <div th:replace="~{fragments/grilla-reservas :: grillaReservas}">
+    </div>
+
 <!--    <div th:replace="~{fragments/grilla-reservas :: grillaReservas}">-->
 <!--    </div>-->
 
-    <div th:replace="~{fragments/detalle-ambiente :: detalleAmbiente}">
+    <div id="contenedorDetalleReserva" hidden>
+        <div th:replace="~{fragments/detalle-ambiente :: detalleAmbiente}"></div>
     </div>
 
     <div id="mensaje"
          class="mensaje"
          hidden>
+    </div>
+
+    <div th:replace="~{fragments/modal-confirmar-validacion :: modalConfirmarValidacion}">
     </div>
 
 </main>

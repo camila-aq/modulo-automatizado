@@ -8,9 +8,19 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;
 
-public interface ReservaUsuarioRepository extends JpaRepository<ReservaUsuario, Integer> {
+public interface ReservaUsuarioRepository
+        extends JpaRepository<ReservaUsuario, Integer> {
 
-    List<ReservaUsuario> findByUsuarioAndActivoTrue(Usuario usuario);
+    List<ReservaUsuario> findByUsuarioAndActivoTrue(
+            Usuario usuario
+    );
 
-    Optional<ReservaUsuario> findByReservaAndUsuario(Reserva reserva, Usuario usuario);
+    Optional<ReservaUsuario> findByReservaAndUsuario(
+            Reserva reserva,
+            Usuario usuario
+    );
+
+    List<ReservaUsuario> findByReservaAndActivoTrueOrderByIdReservaUsuarioAsc(
+            Reserva reserva
+    );
 }

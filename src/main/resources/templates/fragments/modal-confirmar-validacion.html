@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org">
+
+<body>
+
+<div th:fragment="modalConfirmarValidacion"
+     id="modalConfirmarValidacion"
+     class="modal-fondo"
+     hidden>
+
+    <div class="modal-contenedor"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="tituloModalValidacion">
+
+        <div class="modal-cabecera">
+
+            <h2 id="tituloModalValidacion">
+                Confirmar validación de ingreso
+            </h2>
+
+            <button
+                    id="botonCerrarModalValidacion"
+                    class="modal-cerrar"
+                    type="button"
+                    aria-label="Cerrar">
+                ×
+            </button>
+
+        </div>
+
+        <div class="modal-cuerpo">
+
+            <p>
+                ¿Está seguro de validar el ingreso de
+                <strong id="nombreUsuarioConfirmacion">
+                    —
+                </strong>?
+            </p>
+
+            <p class="modal-advertencia">
+                Esta acción registrará la validación individual del usuario.
+            </p>
+
+        </div>
+
+        <div class="modal-acciones">
+
+            <button
+                    id="botonCancelarValidacion"
+                    class="boton boton-secundario"
+                    type="button">
+
+                Cancelar
+
+            </button>
+
+            <button
+                    id="botonConfirmarValidacion"
+                    class="boton boton-validar-ingreso"
+                    type="button">
+
+                Confirmar
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

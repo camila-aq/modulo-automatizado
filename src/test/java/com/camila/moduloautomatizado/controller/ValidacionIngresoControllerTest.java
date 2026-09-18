@@ -9,6 +9,11 @@ import com.camila.moduloautomatizado.model.entity.PuntoValidacion;
 import com.camila.moduloautomatizado.model.entity.ValidacionIngreso;
 import com.camila.moduloautomatizado.model.enums.MedioValidacion;
 import com.camila.moduloautomatizado.model.enums.TipoIdentificador;
+import com.camila.moduloautomatizado.model.enums.RolEnReserva;
+import com.camila.moduloautomatizado.dto.DetalleReservaManualResponse;
+import com.camila.moduloautomatizado.dto.IntegranteReservaResponse;
+
+import java.util.List;
 
 
 import java.time.LocalDateTime;
@@ -864,6 +869,273 @@ class ValidacionIngresoControllerTest {
 
         System.out.println(
                 "[PRUEBA CONTROLLER 10 R3] OK - Ambiente incorrecto rechazado correctamente."
+        );
+    }
+
+    @Test
+    @DisplayName("R3 Controller - Debe devolver el detalle de la reserva con sus integrantes")
+    void debeDevolverDetalleReservaConIntegrantes()
+            throws Exception {
+
+        System.out.println(
+                "\n[PRUEBA CONTROLLER 11 R3] Consultando detalle de reserva..."
+        );
+
+        Usuario usuario = new Usuario();
+
+        usuario.setDni(
+                "10000001"
+        );
+
+        usuario.setCodigoUniversitario(
+                "EST0000001"
+        );
+
+        usuario.setNombres(
+                "Ana"
+        );
+
+        usuario.setApellidos(
+                "Torres"
+        );
+
+        ReservaUsuario reservaUsuario =
+                new ReservaUsuario();
+
+        reservaUsuario.setIdReservaUsuario(
+                1
+        );
+
+        DetalleReservaManualResponse detalle =
+                new DetalleReservaManualResponse(
+                        1,
+                        "RES-SIM-001",
+                        "AMB-SIM-001",
+                        "Sala de Estudio 101",
+                        LocalDateTime.of(
+                                2026,
+                                9,
+                                18,
+                                10,
+                                0
+                        ),
+                        LocalDateTime.of(
+                                2026,
+                                9,
+                                18,
+                                12,
+                                0
+                        ),
+                        LocalDateTime.of(
+                                2026,
+                                9,
+                                17,
+                                21,
+                                15
+                        ),
+                        List.of(
+                                new IntegranteReservaResponse(
+                                        1,
+                                        "EST0000001",
+                                        "10000001",
+                                        "Ana",
+                                        "Torres",
+                                        RolEnReserva.RESPONSABLE,
+                                        false
+                                ),
+                                new IntegranteReservaResponse(
+                                        2,
+                                        "EST0000002",
+                                        "10000002",
+                                        "Bruno",
+                                        "Salazar",
+                                        RolEnReserva.INTEGRANTE,
+                                        true
+                                )
+                        )
+                );
+
+        when(
+                validacionIngresoService
+                        .identificarUsuarioPorDni(
+                                "10000001"
+                        )
+        ).thenReturn(
+                usuario
+        );
+
+        when(
+                validacionIngresoService
+                        .buscarReservaVigenteParaValidacionManual(
+                                usuario
+                        )
+        ).thenReturn(
+                reservaUsuario
+        );
+
+        when(
+                validacionIngresoService
+                        .obtenerDetalleReservaManual(
+                                reservaUsuario
+                        )
+        ).thenReturn(
+                detalle
+        );
+
+        mockMvc.perform(
+                        get(
+                                "/api/validaciones-ingreso/manual/detalle"
+                        )
+                                .param(
+                                        "tipo",
+                                        "DNI"
+                                )
+                                .param(
+                                        "valor",
+                                        "10000001"
+                                )
+                )
+                .andExpect(
+                        status().isOk()
+                )
+                .andExpect(
+                        jsonPath("$.idReservaUsuarioBuscado")
+                                .value(1)
+                )
+                .andExpect(
+                        jsonPath("$.codigoReserva")
+                                .value("RES-SIM-001")
+                )
+                .andExpect(
+                        jsonPath("$.codigoAmbiente")
+                                .value("AMB-SIM-001")
+                )
+                .andExpect(
+                        jsonPath("$.nombreAmbiente")
+                                .value("Sala de Estudio 101")
+                )
+                .andExpect(
+                        jsonPath("$.fechaHoraInicio")
+                                .exists()
+                )
+                .andExpect(
+                        jsonPath("$.fechaHoraFin")
+                                .exists()
+                )
+                .andExpect(
+                        jsonPath("$.fechaHoraRegistro")
+                                .exists()
+                )
+                .andExpect(
+                        jsonPath("$.integrantes.length()")
+                                .value(2)
+                )
+                .andExpect(
+                        jsonPath("$.integrantes[0].dni")
+                                .value("10000001")
+                )
+                .andExpect(
+                        jsonPath("$.integrantes[0].nombres")
+                                .value("Ana")
+                )
+                .andExpect(
+                        jsonPath("$.integrantes[0].apellidos")
+                                .value("Torres")
+                )
+                .andExpect(
+                        jsonPath("$.integrantes[0].rolEnReserva")
+                                .value("RESPONSABLE")
+                )
+                .andExpect(
+                        jsonPath("$.integrantes[0].validado")
+                                .value(false)
+                )
+                .andExpect(
+                        jsonPath("$.integrantes[1].nombres")
+                                .value("Bruno")
+                )
+                .andExpect(
+                        jsonPath("$.integrantes[1].validado")
+                                .value(true)
+                );
+
+        System.out.println(
+                "[PRUEBA CONTROLLER 11 R3] OK - Detalle e integrantes devueltos correctamente."
+        );
+    }
+
+    @Test
+    @DisplayName("R3 Controller - Debe rechazar el detalle cuando no existe reserva vigente")
+    void debeRechazarDetalleCuandoNoExisteReservaVigente()
+            throws Exception {
+
+        System.out.println(
+                "\n[PRUEBA CONTROLLER 12 R3] Consultando detalle sin reserva vigente..."
+        );
+
+        Usuario usuario = new Usuario();
+
+        usuario.setDni(
+                "00000001"
+        );
+
+        usuario.setCodigoUniversitario(
+                "ADM0000001"
+        );
+
+        usuario.setNombres(
+                "Administrador"
+        );
+
+        usuario.setApellidos(
+                "Simulado"
+        );
+
+        when(
+                validacionIngresoService
+                        .identificarUsuarioPorDni(
+                                "00000001"
+                        )
+        ).thenReturn(
+                usuario
+        );
+
+        when(
+                validacionIngresoService
+                        .buscarReservaVigenteParaValidacionManual(
+                                usuario
+                        )
+        ).thenThrow(
+                new IllegalArgumentException(
+                        "El usuario no se encuentra asociado a ninguna reserva."
+                )
+        );
+
+        mockMvc.perform(
+                        get(
+                                "/api/validaciones-ingreso/manual/detalle"
+                        )
+                                .param(
+                                        "tipo",
+                                        "DNI"
+                                )
+                                .param(
+                                        "valor",
+                                        "00000001"
+                                )
+                )
+                .andExpect(
+                        status().isBadRequest()
+                )
+                .andExpect(
+                        jsonPath("$.mensaje")
+                                .value(
+                                        "El usuario no se encuentra asociado a ninguna reserva."
+                                )
+                );
+
+        System.out.println(
+                "[PRUEBA CONTROLLER 12 R3] OK - Detalle rechazado correctamente."
         );
     }
 }

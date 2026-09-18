@@ -9,10 +9,12 @@ import com.camila.moduloautomatizado.model.entity.PuntoValidacion;
 import com.camila.moduloautomatizado.model.entity.Usuario;
 import com.camila.moduloautomatizado.model.entity.ReservaUsuario;
 import com.camila.moduloautomatizado.model.entity.Reserva;
-import com.camila.moduloautomatizado.model.enums.EstadoReserva;
 import com.camila.moduloautomatizado.model.entity.ValidacionIngreso;
+import com.camila.moduloautomatizado.model.enums.EstadoReserva;
 import com.camila.moduloautomatizado.model.enums.MedioValidacion;
 import com.camila.moduloautomatizado.model.enums.TipoIdentificador;
+import com.camila.moduloautomatizado.dto.DetalleReservaManualResponse;
+import com.camila.moduloautomatizado.dto.IntegranteReservaResponse;
 
 import java.time.LocalDateTime;
 
@@ -129,6 +131,67 @@ public class ValidacionIngresoService {
                                 "El usuario no se encuentra asociado a una reserva vigente."
                         )
                 );
+    }
+
+    @Transactional(readOnly = true)
+    public DetalleReservaManualResponse obtenerDetalleReservaManual(
+            ReservaUsuario reservaUsuarioBuscado) {
+
+        ReservaUsuario reservaUsuarioGestionado =
+                reservaUsuarioRepository
+                        .findById(
+                                reservaUsuarioBuscado.getIdReservaUsuario()
+                        )
+                        .orElseThrow(() ->
+                                new IllegalArgumentException(
+                                        "No se encontró la asociación del usuario con la reserva."
+                                )
+                        );
+
+        Reserva reserva =
+                reservaUsuarioGestionado.getReserva();
+
+        List<ReservaUsuario> integrantes =
+                reservaUsuarioRepository
+                        .findByReservaAndActivoTrueOrderByIdReservaUsuarioAsc(
+                                reserva
+                        );
+
+        List<IntegranteReservaResponse> integrantesResponse =
+                integrantes.stream()
+                        .map(reservaUsuario -> {
+
+                            Usuario usuario =
+                                    reservaUsuario.getUsuario();
+
+                            boolean validado =
+                                    validacionIngresoRepository
+                                            .existsByReservaUsuario(
+                                                    reservaUsuario
+                                            );
+
+                            return new IntegranteReservaResponse(
+                                    reservaUsuario.getIdReservaUsuario(),
+                                    usuario.getCodigoUniversitario(),
+                                    usuario.getDni(),
+                                    usuario.getNombres(),
+                                    usuario.getApellidos(),
+                                    reservaUsuario.getRolEnReserva(),
+                                    validado
+                            );
+                        })
+                        .toList();
+
+        return new DetalleReservaManualResponse(
+                reservaUsuarioGestionado.getIdReservaUsuario(),
+                reserva.getCodigoReserva(),
+                reserva.getAmbiente().getCodigo(),
+                reserva.getAmbiente().getNombre(),
+                reserva.getFechaHoraInicio(),
+                reserva.getFechaHoraFin(),
+                reserva.getFechaCreacion(),
+                integrantesResponse
+        );
     }
 
 
