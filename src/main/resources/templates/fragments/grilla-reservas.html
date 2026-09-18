@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org">
+
+<body>
+
+<section th:fragment="grillaReservas"
+         class="seccion-disponibilidad">
+
+    <div class="tabla-scroll">
+
+        <table class="tabla-reservas">
+
+            <thead>
+
+            <tr>
+                <th class="celda-hora celda-cabecera-activa">
+                    Todos
+                </th>
+
+                <th>S1-01</th>
+                <th>S1-02</th>
+                <th>S1-03</th>
+                <th>S1-04</th>
+                <th>S1-05</th>
+                <th>S1-06</th>
+                <th>S1-07</th>
+                <th>P3-08</th>
+                <th>P3-09</th>
+                <th>P3-10</th>
+                <th>P3-11</th>
+            </tr>
+
+            </thead>
+
+            <tbody>
+
+            <tr>
+                <th class="celda-hora">08:00</th>
+
+                <td class="estado-ocupado"></td>
+                <td class="estado-libre"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-libre"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-libre"></td>
+                <td class="estado-libre"></td>
+                <td class="estado-libre"></td>
+            </tr>
+
+            <tr>
+                <th class="celda-hora">09:00</th>
+
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-libre"></td>
+                <td class="estado-libre"></td>
+            </tr>
+
+            <tr>
+                <th class="celda-hora">10:00</th>
+
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+            </tr>
+
+            <tr>
+                <th class="celda-hora">11:00</th>
+
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+            </tr>
+
+            <tr>
+                <th class="celda-hora">12:00</th>
+
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+            </tr>
+
+            <tr>
+                <th class="celda-hora">13:00</th>
+
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+            </tr>
+
+            <tr>
+                <th class="celda-hora">14:00</th>
+
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+            </tr>
+
+            <tr>
+                <th class="celda-hora">15:00</th>
+
+                <td class="estado-reservado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-reservado"></td>
+            </tr>
+
+            <tr>
+                <th class="celda-hora">16:00</th>
+
+                <td class="estado-reservado"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-ocupado"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-reservado"></td>
+            </tr>
+
+            <tr>
+                <th class="celda-hora">17:00</th>
+
+                <td class="estado-reservado"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-reservado"></td>
+            </tr>
+
+            <tr>
+                <th class="celda-hora">18:00</th>
+
+                <td class="estado-reservado"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-reservado"></td>
+            </tr>
+
+            <tr>
+                <th class="celda-hora">19:00</th>
+
+                <td class="estado-reservado"></td>
+                <td class="estado-libre"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-libre"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-reservado"></td>
+                <td class="estado-reservado"></td>
+            </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <div class="leyenda-estados">
+
+        <span class="leyenda-titulo">
+            Estado actual del ambiente
+        </span>
+
+        <div class="leyenda-items">
+
+            <div class="leyenda-item">
+                <span>AMBIENTE LIBRE</span>
+                <span class="muestra-estado estado-libre"></span>
+            </div>
+
+            <div class="leyenda-item">
+                <span>AMBIENTE RESERVADO</span>
+                <span class="muestra-estado estado-reservado"></span>
+            </div>
+
+            <div class="leyenda-item">
+                <span>AMBIENTE OCUPADO</span>
+                <span class="muestra-estado estado-ocupado"></span>
+            </div>
+
+            <div class="leyenda-item">
+                <span>AMBIENTE NO DISPONIBLE</span>
+                <span class="muestra-estado estado-no-disponible"></span>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+</body>
+</html>

@@ -130,3 +130,15 @@ body {
     padding: 12px 15px;
     border: 1px solid #c9c9c9;
 }
+
+.mensaje-error {
+    border-color: #c96565;
+    background: #fff4f4;
+    color: #8a2424;
+}
+
+.mensaje-exito {
+    border-color: #7fa782;
+    background: #f3faf3;
+    color: #315e35;
+}

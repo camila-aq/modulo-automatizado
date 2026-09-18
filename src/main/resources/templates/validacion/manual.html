@@ -15,6 +15,9 @@
 
     <link rel="stylesheet"
           th:href="@{/css/validacion-manual.css}">
+
+    <link rel="stylesheet"
+          th:href="@{/css/reservas.css}">
 </head>
 
 <body>
@@ -135,12 +138,16 @@
 
     </section>
 
+    <div th:replace="~{fragments/grilla-reservas :: grillaReservas}">
+    </div>
+
     <div id="mensaje"
          class="mensaje"
          hidden>
     </div>
 
 </main>
+<script src="/js/validacion-manual.js" defer></script>
 
 </body>
 </html>
