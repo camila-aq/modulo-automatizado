@@ -91,8 +91,15 @@ document.addEventListener("DOMContentLoaded", () => {
             "cuerpoDetalleAmbienteGeneral"
         );
 
+    const plantillaIntegrantesReservaGrilla =
+        document.getElementById(
+            "plantillaIntegrantesReservaGrilla"
+        );
+
     inicializarGrillaReservas();
 
+    let ambientesCargados = [];
+    let reservasCargadas = [];
     let temporizadorIdentificacion;
 
 
@@ -622,29 +629,62 @@ document.addEventListener("DOMContentLoaded", () => {
         const idUbicacion =
             ubicacionReserva.value;
 
-        if (!idUbicacion) {
+        const fecha =
+            fechaReserva.value;
+
+        if (!idUbicacion || !fecha) {
             return;
         }
 
         try {
 
-            const respuesta =
-                await fetch(
+            const [
+                respuestaAmbientes,
+                respuestaReservas
+            ] = await Promise.all([
+
+                fetch(
                     `/api/reservas/catalogo/ubicaciones/${idUbicacion}/ambientes`
-                );
+                ),
 
-            const ambientes =
-                await respuesta.json();
+                fetch(
+                    `/api/reservas?idUbicacion=${idUbicacion}&fecha=${fecha}`
+                )
+            ]);
 
-            if (!respuesta.ok) {
+
+            if (!respuestaAmbientes.ok) {
 
                 throw new Error(
                     "No fue posible cargar los ambientes."
                 );
             }
 
+            if (!respuestaReservas.ok) {
+
+                throw new Error(
+                    "No fue posible cargar las reservas."
+                );
+            }
+
+
+            const ambientes =
+                await respuestaAmbientes.json();
+
+            const reservas =
+                await respuestaReservas.json();
+
+
+            ambientesCargados =
+                ambientes;
+
+            reservasCargadas =
+                reservas;
+
+
             construirGrilla(
-                ambientes
+                ambientes,
+                reservas
             );
 
             ocultarMensaje();
@@ -658,7 +698,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    function construirGrilla(ambientes) {
+    function construirGrilla(
+        ambientes,
+        reservas
+    ) {
 
         encabezadoGrillaReservas.innerHTML = `
             <th class="encabezado-todos">
@@ -775,6 +818,105 @@ document.addEventListener("DOMContentLoaded", () => {
                 fila
             );
         }
+        pintarReservasEnGrilla(
+            reservas
+        );
+
+        vistaDetalleAmbienteGeneral.hidden = true;
+
+        cuerpoGrillaReservas.hidden = false;
+    }
+
+    function pintarReservasEnGrilla(
+        reservas
+    ) {
+
+        reservas.forEach(
+            reserva => {
+
+                const celdasAmbiente =
+                    cuerpoGrillaReservas
+                        .querySelectorAll(
+                            `td[data-id-ambiente="${reserva.idAmbiente}"]`
+                        );
+
+                celdasAmbiente.forEach(
+                    celda => {
+
+                        const hora =
+                            Number(
+                                celda.dataset.hora
+                            );
+
+                        if (
+                            !reservaOcupaHora(
+                                reserva,
+                                hora
+                            )
+                        ) {
+                            return;
+                        }
+
+                        celda.classList.remove(
+                            "estado-libre"
+                        );
+
+                        celda.classList.add(
+                            "estado-reservado"
+                        );
+
+                        celda.dataset.idReserva =
+                            reserva.idReserva;
+
+                        celda.dataset.codigoReserva =
+                            reserva.codigoReserva;
+
+                        celda.title =
+                            reserva.codigoReserva;
+                    }
+                );
+            }
+        );
+    }
+
+    function reservaOcupaHora(
+        reserva,
+        hora
+    ) {
+
+        const fecha =
+            fechaReserva.value;
+
+        const horaTexto =
+            String(hora)
+                .padStart(
+                    2,
+                    "0"
+                );
+
+        const inicioCelda =
+            new Date(
+                `${fecha}T${horaTexto}:00:00`
+            );
+
+        const finCelda =
+            new Date(
+                inicioCelda.getTime()
+                + 60 * 60 * 1000
+            );
+
+        const inicioReserva =
+            new Date(
+                reserva.fechaHoraInicio
+            );
+
+        const finReserva =
+            new Date(
+                reserva.fechaHoraFin
+            );
+
+        return inicioReserva < finCelda
+            && finReserva > inicioCelda;
     }
 
     function mostrarDetalleAmbienteGeneral(
@@ -803,49 +945,165 @@ document.addEventListener("DOMContentLoaded", () => {
             ambienteSeleccionado.idAmbiente
         );
 
-        construirHorasAmbienteGeneral();
+        construirHorasAmbienteGeneral(
+            ambienteSeleccionado
+        );
     }
 
 
 
-    function construirHorasAmbienteGeneral() {
+    function construirHorasAmbienteGeneral(
+        ambienteSeleccionado
+    ) {
 
         cuerpoDetalleAmbienteGeneral.innerHTML =
             "";
 
-        for (let hora = 8; hora <= 20; hora++) {
+        for (
+            let hora = 8;
+            hora <= 20;
+            hora++
+        ) {
 
             const fila =
-                document.createElement("tr");
+                document.createElement(
+                    "tr"
+                );
 
             const horaInicio =
-                `${String(hora).padStart(2, "0")}:00`;
+                `${String(hora)
+                    .padStart(2, "0")}:00`;
 
             const horaFin =
-                `${String(hora + 1).padStart(2, "0")}:00`;
+                `${String(hora + 1)
+                    .padStart(2, "0")}:00`;
 
-            fila.innerHTML = `
-            <td class="celda-hora-detalle">
-                ${horaInicio} - ${horaFin}
-            </td>
 
-            <td class="estado-detalle estado-libre-detalle">
-                Libre
-            </td>
+            const reserva =
+                reservasCargadas.find(
+                    reserva =>
 
-            <td>—</td>
-            <td>—</td>
-            <td>—</td>
-            <td>—</td>
-            <td>—</td>
-            <td>—</td>
-            <td>—</td>
-            <td>—</td>
-        `;
+                        reserva.idAmbiente
+                        === ambienteSeleccionado.idAmbiente
 
-            cuerpoDetalleAmbienteGeneral.appendChild(
-                fila
-            );
+                        &&
+
+                        reservaOcupaHora(
+                            reserva,
+                            hora
+                        )
+                );
+
+
+            if (reserva) {
+
+                fila.classList.add(
+                    "fila-reserva-clickeable"
+                );
+
+                fila.dataset.idReserva =
+                    reserva.idReserva;
+
+                fila.innerHTML = `
+                <td class="celda-hora-detalle">
+                    ${horaInicio} - ${horaFin}
+                </td>
+
+                <td class="estado-detalle estado-reservado-detalle">
+                    Reservado
+                </td>
+
+                <td>
+                    ${formatearFechaHora(
+                    reserva.fechaHoraRegistro
+                )}
+                </td>
+
+                <td>
+                    <button
+                        class="accion-tabla"
+                        type="button"
+                        title="Ocupar reserva">
+                        ✓
+                    </button>
+                </td>
+
+                <td>
+                    <button
+                        class="accion-tabla"
+                        type="button"
+                        title="Cancelar reserva">
+                        ✕
+                    </button>
+                </td>
+
+                <td>
+                    <button
+                        class="accion-tabla"
+                        type="button"
+                        title="Liberar reserva">
+                        🗑
+                    </button>
+                </td>
+
+                <td>—</td>
+
+                <td>—</td>
+
+                <td>—</td>
+
+                <td>
+                    ${reserva.responsable}
+                </td>
+            `;
+
+
+                fila.addEventListener(
+                    "click",
+                    evento => {
+
+                        if (
+                            evento.target.closest(
+                                "button"
+                            )
+                        ) {
+                            return;
+                        }
+
+                        mostrarIntegrantesReservaGrilla(
+                            reserva.idReserva,
+                            fila
+                        );
+                    }
+                );
+
+            } else {
+
+                fila.innerHTML = `
+                <td class="celda-hora-detalle">
+                    ${horaInicio} - ${horaFin}
+                </td>
+
+                <td class="estado-detalle estado-libre-detalle">
+                    Libre
+                </td>
+
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+            `;
+            }
+
+
+            cuerpoDetalleAmbienteGeneral
+                .appendChild(
+                    fila
+                );
         }
     }
 
@@ -901,6 +1159,205 @@ document.addEventListener("DOMContentLoaded", () => {
                     );
                 }
             );
+    }
+
+    async function mostrarIntegrantesReservaGrilla(
+        idReserva,
+        filaReserva
+    ) {
+
+        /*
+     * Si la reserva ya está desplegada,
+     * un segundo clic contrae sus integrantes.
+     */
+        const detalleActual =
+            filaReserva.nextElementSibling;
+
+        if (
+            filaReserva.classList.contains(
+                "reserva-resaltada"
+            )
+            &&
+            detalleActual
+            &&
+            detalleActual.classList.contains(
+                "fila-informacion-reserva-grilla"
+            )
+        ) {
+
+            detalleActual.remove();
+
+            filaReserva.classList.remove(
+                "reserva-resaltada"
+            );
+
+            ocultarMensaje();
+
+            return;
+        }
+
+        try {
+
+            const respuesta =
+                await fetch(
+                    `/api/reservas/${idReserva}`
+                );
+
+            const datos =
+                await respuesta.json();
+
+            if (!respuesta.ok) {
+
+                throw new Error(
+                    datos.message
+                    || "No fue posible cargar la reserva."
+                );
+            }
+
+
+            /*
+             * Solo puede haber un detalle
+             * de integrantes abierto.
+             */
+            cuerpoDetalleAmbienteGeneral
+                .querySelectorAll(
+                    ".fila-informacion-reserva-grilla"
+                )
+                .forEach(
+                    fila => fila.remove()
+                );
+
+
+            cuerpoDetalleAmbienteGeneral
+                .querySelectorAll(
+                    ".reserva-resaltada"
+                )
+                .forEach(
+                    fila => {
+
+                        fila.classList.remove(
+                            "reserva-resaltada"
+                        );
+                    }
+                );
+
+
+            filaReserva.classList.add(
+                "reserva-resaltada"
+            );
+
+
+            const fragmento =
+                plantillaIntegrantesReservaGrilla
+                    .content
+                    .cloneNode(
+                        true
+                    );
+
+
+            const filaInformacion =
+                fragmento.querySelector(
+                    ".fila-informacion-reserva"
+                );
+
+            filaInformacion.classList.add(
+                "fila-informacion-reserva-grilla"
+            );
+
+
+            const cuerpoIntegrantes =
+                fragmento.querySelector(
+                    "#integrantesReservaBody"
+                );
+
+            /*
+             * Evitamos duplicar el ID que ya
+             * utiliza el detalle de búsqueda manual.
+             */
+            cuerpoIntegrantes.id =
+                "integrantesReservaGrillaBody";
+
+
+            datos.integrantes.forEach(
+                (integrante, indice) => {
+
+                    const fila =
+                        document.createElement(
+                            "tr"
+                        );
+
+
+                    const rolTexto =
+                        integrante.rolEnReserva
+                        === "RESPONSABLE"
+                            ? "Responsable"
+                            : "Integrante";
+
+
+                    const estadoClase =
+                        integrante.validado
+                            ? "estado-validado"
+                            : "estado-pendiente";
+
+
+                    const estadoTexto =
+                        integrante.validado
+                            ? "Validado"
+                            : "Pendiente";
+
+
+                    fila.innerHTML = `
+                    <td>
+                        ${indice + 1}
+                    </td>
+
+                    <td>
+                        ${integrante.codigoUniversitario}
+                    </td>
+
+                    <td>
+                        ${integrante.dni}
+                    </td>
+
+                    <td>
+                        ${integrante.nombres}
+                        ${integrante.apellidos}
+                    </td>
+
+                    <td>
+                        ${rolTexto}
+                    </td>
+
+                    <td>
+                        <span
+                            class="estado-ingreso ${estadoClase}">
+                            ${estadoTexto}
+                        </span>
+                    </td>
+                `;
+
+
+                    cuerpoIntegrantes
+                        .appendChild(
+                            fila
+                        );
+                }
+            );
+
+
+            filaReserva.after(
+                fragmento
+            );
+
+            ocultarMensaje();
+
+        } catch (error) {
+
+            mostrarMensaje(
+                error.message,
+                "error"
+            );
+        }
     }
 
 });

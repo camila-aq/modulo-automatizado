@@ -354,6 +354,13 @@
     color: #315e35;
 }
 
+.fila-reserva-clickeable td {
+    cursor: pointer;
+}
+
+.fila-reserva-clickeable:hover td {
+    filter: brightness(0.97);
+}
 
 /* =========================
    Responsive
