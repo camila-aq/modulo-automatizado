@@ -32,13 +32,11 @@
     Espacio superior intencionalmente vacío.
     No se utilizarán logos institucionales.
 -->
-<header class="encabezado-vacio">
-</header>
+
+<div th:replace="~{fragments/menu-administrador :: menuAdministrador}">
+</div>
 
 <main class="contenedor-principal">
-
-    <div th:replace="~{fragments/menu-administrador :: menuAdministrador}">
-    </div>
 
     <section class="cabecera-pagina">
 
@@ -52,7 +50,11 @@
 
     </section>
 
-    <section class="panel">
+    <div th:replace="~{fragments/grilla-reservas :: criteriosReservas}">
+    </div>
+
+
+    <section class="panel panel-identificacion">
 
         <div class="panel-titulo">
             Identificación del usuario
@@ -107,13 +109,13 @@
             <div class="usuario-identificado"
                  id="usuarioIdentificado">
 
-                <span class="usuario-etiqueta">
-                    Usuario:
-                </span>
+            <span class="usuario-etiqueta">
+                Usuario:
+            </span>
 
                 <span id="nombreUsuario">
-                    —
-                </span>
+                —
+            </span>
 
             </div>
 
@@ -154,11 +156,10 @@
 
     </section>
 
+
     <div th:replace="~{fragments/grilla-reservas :: grillaReservas}">
     </div>
 
-<!--    <div th:replace="~{fragments/grilla-reservas :: grillaReservas}">-->
-<!--    </div>-->
 
     <div id="contenedorDetalleReserva" hidden>
         <div th:replace="~{fragments/detalle-ambiente :: detalleAmbiente}"></div>

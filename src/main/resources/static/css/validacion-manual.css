@@ -71,6 +71,69 @@
     background: #527a58;
 }
 
+/* =========================
+   Panel de identificación
+   ========================= */
+
+.panel-identificacion {
+    margin-top: 10px;
+    margin-bottom: 14px;
+    border-color: #bcbcbc;
+}
+
+.panel-identificacion .panel-titulo {
+    padding: 5px 8px;
+    border-bottom: none;
+    background: #427f8f;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.panel-identificacion .panel-contenido {
+    padding: 14px;
+}
+
+/* Tipografía del panel de identificación */
+
+.panel-identificacion .panel-contenido {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 11px;
+}
+
+.panel-identificacion .texto-ayuda {
+    font-size: 11px;
+}
+
+.panel-identificacion .campo-formulario label {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    font-weight: 400;
+}
+
+.panel-identificacion .campo-formulario input {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 11px;
+}
+
+.panel-identificacion .separador-identificador {
+    font-size: 11px;
+}
+
+.panel-identificacion .usuario-identificado {
+    font-size: 11px;
+}
+
+.panel-identificacion .usuario-etiqueta {
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.panel-identificacion .boton {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 11px;
+}
+
 @media (max-width: 760px) {
 
     .formulario-identificacion {

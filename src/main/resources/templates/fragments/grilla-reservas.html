@@ -4,9 +4,13 @@
 
 <body>
 
-<section th:fragment="grillaReservas"
-         class="seccion-reservas"
-         id="seccionReservas">
+
+<!-- =========================
+     Criterios de búsqueda
+     ========================= -->
+
+<section th:fragment="criteriosReservas"
+         class="seccion-reservas">
 
     <div class="criterios-reserva">
 
@@ -23,9 +27,11 @@
                 </label>
 
                 <select id="ubicacionReserva">
+
                     <option value="">
                         Cargando ubicaciones...
                     </option>
+
                 </select>
 
             </div>
@@ -44,7 +50,9 @@
                         id="botonBuscarGrilla"
                         class="boton-buscar-grilla"
                         type="button">
+
                     Buscar
+
                 </button>
 
             </div>
@@ -53,11 +61,23 @@
 
     </div>
 
+</section>
+
+
+<!-- =========================
+     Grilla de reservas
+     ========================= -->
+
+<section th:fragment="grillaReservas"
+         class="seccion-grilla-reservas"
+         id="seccionReservas">
+
     <div class="contenedor-grilla-reservas">
 
         <table class="tabla-reservas">
 
             <thead>
+
             <tr id="encabezadoGrillaReservas">
 
                 <th class="encabezado-todos">
@@ -65,6 +85,7 @@
                 </th>
 
             </tr>
+
             </thead>
 
             <tbody id="cuerpoGrillaReservas">
@@ -73,6 +94,7 @@
         </table>
 
     </div>
+
 
     <div class="leyenda-reservas">
 
@@ -83,23 +105,47 @@
         <div class="leyenda-items">
 
             <div class="leyenda-item">
-                <span>AMBIENTE LIBRE</span>
-                <span class="muestra-estado estado-libre"></span>
+
+                <span>
+                    AMBIENTE LIBRE
+                </span>
+
+                <span class="muestra-estado estado-libre">
+                </span>
+
             </div>
 
             <div class="leyenda-item">
-                <span>AMBIENTE RESERVADO</span>
-                <span class="muestra-estado estado-reservado"></span>
+
+                <span>
+                    AMBIENTE RESERVADO
+                </span>
+
+                <span class="muestra-estado estado-reservado">
+                </span>
+
             </div>
 
             <div class="leyenda-item">
-                <span>AMBIENTE OCUPADO</span>
-                <span class="muestra-estado estado-ocupado"></span>
+
+                <span>
+                    AMBIENTE OCUPADO
+                </span>
+
+                <span class="muestra-estado estado-ocupado">
+                </span>
+
             </div>
 
             <div class="leyenda-item">
-                <span>AMBIENTE NO DISPONIBLE</span>
-                <span class="muestra-estado estado-no-disponible"></span>
+
+                <span>
+                    AMBIENTE NO DISPONIBLE
+                </span>
+
+                <span class="muestra-estado estado-no-disponible">
+                </span>
+
             </div>
 
         </div>

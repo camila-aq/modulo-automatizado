@@ -4,25 +4,61 @@
 
 <body>
 
-<nav th:fragment="menuAdministrador"
-     class="menu-administrador">
+<div th:fragment="menuAdministrador"
+     class="cabecera-administrador">
 
-    <button class="menu-boton menu-boton-activo"
-            type="button">
-        Reservas
-    </button>
+    <header class="barra-superior">
 
-    <button class="menu-boton"
-            type="button">
-        Consultas
-    </button>
+        <div class="bloque-menu-superior">
 
-    <button class="menu-boton"
-            type="button">
-        Reportes
-    </button>
+            <span class="texto-menu-superior">
+                MENÚ
+            </span>
 
-</nav>
+            <span class="icono-menu-superior">
+                ☰
+            </span>
+
+        </div>
+
+        <div class="datos-usuario-superior">
+
+            <div class="titulo-sistema-superior">
+                CAMPUS VIRTUAL
+            </div>
+
+            <div class="nombre-usuario-superior">
+                APARICIO Q CAMILA
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <nav class="menu-administrador">
+
+        <button
+                class="menu-boton menu-boton-activo"
+                type="button">
+            Reservas
+        </button>
+
+        <button
+                class="menu-boton"
+                type="button">
+            Consultas
+        </button>
+
+        <button
+                class="menu-boton"
+                type="button">
+            Reportes
+        </button>
+
+    </nav>
+
+</div>
 
 </body>
 </html>
