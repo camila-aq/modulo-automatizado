@@ -1,5 +1,6 @@
 package com.camila.moduloautomatizado.repository;
 
+import com.camila.moduloautomatizado.model.entity.Ambiente;
 import com.camila.moduloautomatizado.model.entity.PuntoValidacion;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -11,4 +12,6 @@ public interface PuntoValidacionRepository
     Optional<PuntoValidacion> findByCodigoPunto(String codigoPunto);
 
     Optional<PuntoValidacion> findByCodigoPuntoAndActivoTrue(String codigoPunto);
+
+    Optional<PuntoValidacion> findByAmbienteAndActivoTrue(Ambiente ambiente);
 }

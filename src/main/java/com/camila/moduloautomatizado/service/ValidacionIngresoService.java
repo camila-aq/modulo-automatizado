@@ -14,7 +14,6 @@ import com.camila.moduloautomatizado.model.entity.ValidacionIngreso;
 import com.camila.moduloautomatizado.model.enums.MedioValidacion;
 import com.camila.moduloautomatizado.model.enums.TipoIdentificador;
 
-
 import java.time.LocalDateTime;
 
 import java.util.Objects;
@@ -100,6 +99,137 @@ public class ValidacionIngresoService {
         return validacionIngresoRepository.save(validacionIngreso);
     }
 
+    @Transactional(readOnly = true)
+    public ReservaUsuario buscarReservaVigenteParaValidacionManual(
+            Usuario usuario) {
+
+        List<ReservaUsuario> asociaciones =
+                reservaUsuarioRepository.findByUsuarioAndActivoTrue(
+                        usuario
+                );
+
+        if (asociaciones.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "El usuario no se encuentra asociado a ninguna reserva."
+            );
+        }
+
+        LocalDateTime momento = LocalDateTime.now();
+
+        return asociaciones.stream()
+                .filter(reservaUsuario ->
+                        reservaEstaVigente(
+                                reservaUsuario,
+                                momento
+                        )
+                )
+                .findFirst()
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "El usuario no se encuentra asociado a una reserva vigente."
+                        )
+                );
+    }
+
+
+
+    @Transactional(readOnly = true)
+    public Usuario identificarUsuarioPorDni(String dni) {
+
+        return obtenerUsuarioPorDni(dni);
+    }
+
+    @Transactional(readOnly = true)
+    public Usuario identificarUsuarioPorCodigoUniversitario(
+            String codigoUniversitario) {
+
+        return usuarioRepository
+                .findByCodigoUniversitario(codigoUniversitario)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "El código universitario no corresponde a un usuario registrado."
+                        )
+                );
+    }
+
+    @Transactional
+    public ValidacionIngreso confirmarValidacionManual(
+            ReservaUsuario reservaUsuario,
+            TipoIdentificador tipoIdentificador) {
+
+        LocalDateTime momento = LocalDateTime.now();
+
+        /*
+         * Se vuelve a comprobar la vigencia al confirmar.
+         * La reserva pudo haber terminado o cambiado de estado
+         * después de haber sido localizada.
+         */
+        if (!reservaEstaVigente(reservaUsuario, momento)) {
+            throw new IllegalArgumentException(
+                    "El usuario no se encuentra asociado a una reserva vigente."
+            );
+        }
+
+        /*
+         * Evita registrar más de una validación aceptada
+         * para el mismo integrante de la misma reserva.
+         */
+        if (validacionIngresoRepository.existsByReservaUsuario(reservaUsuario)) {
+            throw new IllegalArgumentException(
+                    "El usuario ya cuenta con una validación aceptada para esta reserva."
+            );
+        }
+
+        /*
+         * En el flujo manual el administrador no selecciona
+         * un punto de validación. El sistema obtiene automáticamente
+         * el punto activo correspondiente al ambiente reservado.
+         */
+        PuntoValidacion puntoValidacion =
+                puntoValidacionRepository
+                        .findByAmbienteAndActivoTrue(
+                                reservaUsuario
+                                        .getReserva()
+                                        .getAmbiente()
+                        )
+                        .orElseThrow(() ->
+                                new IllegalArgumentException(
+                                        "No se encontró un punto de validación activo para el ambiente de la reserva."
+                                )
+                        );
+
+        ValidacionIngreso validacionIngreso =
+                new ValidacionIngreso();
+
+        validacionIngreso.setPuntoValidacion(
+                puntoValidacion
+        );
+
+        validacionIngreso.setReservaUsuario(
+                reservaUsuario
+        );
+
+        validacionIngreso.setMedioValidacion(
+                MedioValidacion.INGRESO_MANUAL
+        );
+
+        validacionIngreso.setTipoIdentificador(
+                tipoIdentificador
+        );
+
+        validacionIngreso.setFechaHoraValidacion(
+                momento
+        );
+
+        validacionIngreso.setFechaCreacion(
+                momento
+        );
+
+        return validacionIngresoRepository.save(
+                validacionIngreso
+        );
+    }
+
     private boolean reservaEstaVigente(
             ReservaUsuario reservaUsuario,
             LocalDateTime momento) {
@@ -139,4 +269,6 @@ public class ValidacionIngresoService {
                         )
                 );
     }
+
+
 }
