@@ -154,6 +154,26 @@ public class ValidacionIngresoService {
 
     @Transactional
     public ValidacionIngreso confirmarValidacionManual(
+            Integer idReservaUsuario,
+            TipoIdentificador tipoIdentificador) {
+
+        ReservaUsuario reservaUsuario =
+                reservaUsuarioRepository
+                        .findById(idReservaUsuario)
+                        .orElseThrow(() ->
+                                new IllegalArgumentException(
+                                        "No se encontró la asociación del usuario con la reserva."
+                                )
+                        );
+
+        return confirmarValidacionManual(
+                reservaUsuario,
+                tipoIdentificador
+        );
+    }
+
+    @Transactional
+    public ValidacionIngreso confirmarValidacionManual(
             ReservaUsuario reservaUsuario,
             TipoIdentificador tipoIdentificador) {
 
