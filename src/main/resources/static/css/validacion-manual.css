@@ -1,65 +1,146 @@
-.texto-ayuda {
-    margin-top: 0;
-    margin-bottom: 22px;
-    color: #555555;
+/* =========================
+   Panel de identificación
+   ========================= */
+
+.panel-identificacion {
+    margin-top: 6px;
+    margin-bottom: 7px;
+
+    border: 1px solid #bcbcbc;
+    background: #ffffff;
 }
+
+.panel-identificacion .panel-titulo {
+    padding: 3px 6px;
+
+    border-bottom: none;
+
+    background: #427f8f;
+    color: #ffffff;
+
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.panel-identificacion .panel-contenido {
+    padding: 7px 12px;
+
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 10px;
+}
+
+
+/* =========================
+   Formulario de identificación
+   ========================= */
 
 .formulario-identificacion {
     display: flex;
     align-items: flex-end;
-    gap: 18px;
+
+    gap: 10px;
 }
 
 .campo-formulario {
     display: flex;
     flex-direction: column;
-    width: 310px;
+
+    width: 250px;
 }
 
 .campo-formulario label {
-    margin-bottom: 7px;
-    font-weight: 600;
+    margin-bottom: 3px;
+
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 10px;
+    font-weight: 400;
 }
 
 .campo-formulario input {
     width: 100%;
-    height: 36px;
-    padding: 7px 10px;
+    height: 27px;
+
+    padding: 3px 7px;
+
     border: 1px solid #bcbcbc;
     background: #ffffff;
-    font-size: 14px;
+
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 10px;
 }
 
 .campo-formulario input:focus {
-    outline: 2px solid #d8d8d8;
+    outline: 1px solid #8f8f8f;
     border-color: #777777;
 }
 
+
+/* =========================
+   Separador "o"
+   ========================= */
+
 .separador-identificador {
-    padding-bottom: 9px;
+    padding-bottom: 6px;
+
     color: #777777;
+
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 10px;
 }
+
+
+/* =========================
+   Usuario identificado
+   ========================= */
 
 .usuario-identificado {
     display: flex;
     align-items: center;
-    min-height: 44px;
-    margin-top: 24px;
-    padding: 10px 12px;
+
+    min-height: 29px;
+
+    margin-top: 7px;
+    padding: 4px 8px;
+
     border: 1px solid #d4d4d4;
     background: #fafafa;
+
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 10px;
 }
 
 .usuario-etiqueta {
-    margin-right: 8px;
+    margin-right: 6px;
+
+    font-size: 10px;
     font-weight: 600;
 }
 
+
+/* =========================
+   Acciones
+   ========================= */
+
 .acciones-formulario {
     display: flex;
-    gap: 10px;
-    margin-top: 20px;
+
+    gap: 8px;
+
+    margin-top: 7px;
 }
+
+.panel-identificacion .boton {
+    min-width: 105px;
+
+    padding: 5px 11px;
+
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 10px;
+}
+
+
+/* Botón de validación */
 
 .boton-validar-ingreso {
     border-color: #4f7755;
@@ -71,74 +152,22 @@
     background: #527a58;
 }
 
+
 /* =========================
-   Panel de identificación
+   Responsive
    ========================= */
 
-.panel-identificacion {
-    margin-top: 10px;
-    margin-bottom: 14px;
-    border-color: #bcbcbc;
-}
-
-.panel-identificacion .panel-titulo {
-    padding: 5px 8px;
-    border-bottom: none;
-    background: #427f8f;
-    color: #ffffff;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.panel-identificacion .panel-contenido {
-    padding: 14px;
-}
-
-/* Tipografía del panel de identificación */
-
-.panel-identificacion .panel-contenido {
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 11px;
-}
-
-.panel-identificacion .texto-ayuda {
-    font-size: 11px;
-}
-
-.panel-identificacion .campo-formulario label {
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 11px;
-    font-weight: 400;
-}
-
-.panel-identificacion .campo-formulario input {
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 11px;
-}
-
-.panel-identificacion .separador-identificador {
-    font-size: 11px;
-}
-
-.panel-identificacion .usuario-identificado {
-    font-size: 11px;
-}
-
-.panel-identificacion .usuario-etiqueta {
-    font-size: 11px;
-    font-weight: 600;
-}
-
-.panel-identificacion .boton {
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 11px;
-}
-
 @media (max-width: 760px) {
+
+    .panel-identificacion .panel-contenido {
+        padding: 8px;
+    }
 
     .formulario-identificacion {
         flex-direction: column;
         align-items: stretch;
+
+        gap: 6px;
     }
 
     .campo-formulario {
@@ -147,23 +176,21 @@
 
     .separador-identificador {
         padding: 0;
+
         text-align: center;
     }
 
-    .contenedor-principal {
-        width: calc(100% - 30px);
-    }
-
-    .menu-administrador {
-        justify-content: stretch;
-    }
-
-    .menu-boton {
-        flex: 1;
-        min-width: auto;
+    .usuario-identificado {
+        margin-top: 6px;
     }
 
     .acciones-formulario {
         flex-wrap: wrap;
+    }
+
+    .panel-identificacion .boton {
+        flex: 1;
+
+        min-width: 100px;
     }
 }

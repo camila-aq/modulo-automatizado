@@ -717,7 +717,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         document.createElement("td");
 
                     celda.classList.add(
-                        "celda-grilla-pendiente"
+                        "estado-libre"
                     );
 
                     celda.dataset.idAmbiente =

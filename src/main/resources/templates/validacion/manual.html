@@ -33,20 +33,28 @@
     No se utilizarán logos institucionales.
 -->
 
-<div th:replace="~{fragments/menu-administrador :: menuAdministrador}">
+
+<div th:replace="~{fragments/menu-administrador :: barraSuperior}">
 </div>
 
 <main class="contenedor-principal">
 
-    <section class="cabecera-pagina">
+    <section class="fila-cabecera-pagina">
 
-        <h1>
-            Gestión de reservas de ambientes de estudio
-        </h1>
+        <div class="cabecera-pagina">
 
-        <p>
-            Validación manual de ingreso
-        </p>
+            <h1>
+                Gestión de reservas de ambientes de estudio
+            </h1>
+
+            <p>
+                Validación manual de ingreso
+            </p>
+
+        </div>
+
+        <div th:replace="~{fragments/menu-administrador :: menuAdministrador}">
+        </div>
 
     </section>
 
@@ -61,10 +69,6 @@
         </div>
 
         <div class="panel-contenido">
-
-            <p class="texto-ayuda">
-                Ingrese el DNI o el código universitario del usuario.
-            </p>
 
             <div class="formulario-identificacion">
 

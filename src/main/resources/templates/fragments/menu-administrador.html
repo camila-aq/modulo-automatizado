@@ -4,61 +4,55 @@
 
 <body>
 
-<div th:fragment="menuAdministrador"
-     class="cabecera-administrador">
+<header th:fragment="barraSuperior"
+        class="barra-superior">
 
-    <header class="barra-superior">
+    <div class="bloque-menu-superior">
 
-        <div class="bloque-menu-superior">
+        <span class="texto-menu-superior">
+            MENÚ
+        </span>
 
-            <span class="texto-menu-superior">
-                MENÚ
-            </span>
+        <span class="icono-menu-superior">
+            ☰
+        </span>
 
-            <span class="icono-menu-superior">
-                ☰
-            </span>
+    </div>
 
+    <div class="datos-usuario-superior">
+
+        <div class="titulo-sistema-superior">
+            CAMPUS VIRTUAL
         </div>
 
-        <div class="datos-usuario-superior">
-
-            <div class="titulo-sistema-superior">
-                CAMPUS VIRTUAL
-            </div>
-
-            <div class="nombre-usuario-superior">
-                APARICIO Q CAMILA
-            </div>
-
+        <div class="nombre-usuario-superior">
+            APARICIO Q CAMILA
         </div>
 
-    </header>
+    </div>
+
+</header>
 
 
-    <nav class="menu-administrador">
+<nav th:fragment="menuAdministrador"
+     class="menu-administrador">
 
-        <button
-                class="menu-boton menu-boton-activo"
-                type="button">
-            Reservas
-        </button>
+    <button class="menu-boton menu-boton-activo"
+            type="button">
+        Reservas
+    </button>
 
-        <button
-                class="menu-boton"
-                type="button">
-            Consultas
-        </button>
+    <button class="menu-boton"
+            type="button">
+        Consultas
+    </button>
 
-        <button
-                class="menu-boton"
-                type="button">
-            Reportes
-        </button>
+    <button class="menu-boton"
+            type="button">
+        Reportes
+    </button>
 
-    </nav>
-
-</div>
+</nav>
 
 </body>
 </html>
