@@ -61,6 +61,16 @@
     margin-top: 20px;
 }
 
+.boton-validar-ingreso {
+    border-color: #4f7755;
+    background: #5f8d65;
+    color: #ffffff;
+}
+
+.boton-validar-ingreso:hover:not(:disabled) {
+    background: #527a58;
+}
+
 @media (max-width: 760px) {
 
     .formulario-identificacion {
@@ -88,5 +98,9 @@
     .menu-boton {
         flex: 1;
         min-width: auto;
+    }
+
+    .acciones-formulario {
+        flex-wrap: wrap;
     }
 }

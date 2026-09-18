@@ -14,6 +14,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const botonBuscarReserva =
         document.getElementById("botonBuscarReserva");
 
+    const botonValidarIngreso =
+        document.getElementById("botonValidarIngreso");
+
     const botonLimpiar =
         document.getElementById("botonLimpiar");
 
@@ -22,21 +25,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let temporizadorIdentificacion;
 
-    let usuarioIdentificado = false;
-
 
     campoDni.addEventListener("input", () => {
 
-        campoCodigo.value = "";
+        const dni =
+            campoDni.value.trim();
+
+        if (dni.length > 0) {
+            campoCodigo.value = "";
+            campoCodigo.disabled = true;
+        } else {
+            campoCodigo.disabled = false;
+        }
 
         reiniciarIdentificacion();
 
         clearTimeout(
             temporizadorIdentificacion
         );
-
-        const dni =
-            campoDni.value.trim();
 
         if (dni.length === 8) {
 
@@ -54,16 +60,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
     campoCodigo.addEventListener("input", () => {
 
-        campoDni.value = "";
+        const codigo =
+            campoCodigo.value.trim();
+
+        if (codigo.length > 0) {
+            campoDni.value = "";
+            campoDni.disabled = true;
+        } else {
+            campoDni.disabled = false;
+        }
 
         reiniciarIdentificacion();
 
         clearTimeout(
             temporizadorIdentificacion
         );
-
-        const codigo =
-            campoCodigo.value.trim();
 
         if (codigo.length > 0) {
 
@@ -83,6 +94,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         campoDni.value = "";
         campoCodigo.value = "";
+
+        campoDni.disabled = false;
+        campoCodigo.disabled = false;
 
         reiniciarIdentificacion();
 
@@ -128,10 +142,8 @@ document.addEventListener("DOMContentLoaded", () => {
             nombreUsuario.textContent =
                 nombreCompleto;
 
-            usuarioIdentificado = true;
-
-            botonBuscarReserva.disabled =
-                false;
+            botonBuscarReserva.disabled = false;
+            botonValidarIngreso.disabled = false;
 
             ocultarMensaje();
 
@@ -149,11 +161,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function reiniciarIdentificacion() {
 
-        usuarioIdentificado = false;
-
         nombreUsuario.textContent = "—";
 
         botonBuscarReserva.disabled = true;
+        botonValidarIngreso.disabled = true;
     }
 
 
