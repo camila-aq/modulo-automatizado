@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org">
+
+<body>
+
+<section th:fragment="detalleAmbiente"
+         class="detalle-ambiente">
+
+    <div class="tabs-ambientes">
+
+        <button type="button">
+            Todos
+        </button>
+
+        <button type="button">
+            S1-01
+        </button>
+
+        <button type="button">
+            S1-02
+        </button>
+
+        <button type="button"
+                class="tab-activo">
+            S1-03
+        </button>
+
+        <button type="button">
+            S1-04
+        </button>
+
+        <button type="button">
+            S1-05
+        </button>
+
+    </div>
+
+
+    <div class="titulo-detalle-ambiente">
+        COMPLEJO DE ESTUDIOS SIMULADO - SALA DE ESTUDIO 101
+    </div>
+
+
+    <div class="tabla-scroll">
+
+        <table class="tabla-detalle-ambiente">
+
+            <thead>
+
+            <tr>
+                <th>Hora</th>
+                <th>Estado</th>
+                <th>Fecha/hora de registro</th>
+                <th>Ocupar</th>
+                <th>Cancelar</th>
+                <th>Liberar</th>
+                <th>Materiales prestados</th>
+                <th>Recibir materiales</th>
+                <th>Observaciones</th>
+                <th>Responsable / Motivo</th>
+            </tr>
+
+            </thead>
+
+            <tbody>
+
+            <tr>
+                <td class="celda-hora-detalle">
+                    <a href="#">
+                        08:00 - 09:00
+                    </a>
+
+                    <button class="accion-editar"
+                            type="button"
+                            title="Editar reserva">
+                        ✎
+                    </button>
+                </td>
+
+                <td class="estado-detalle estado-ocupado-detalle">
+                    Ocupado
+                </td>
+
+                <td>
+                    18/09/2026 07:20
+                </td>
+
+                <td>—</td>
+
+                <td>
+                    <button class="accion-tabla"
+                            type="button"
+                            title="Cancelar reserva">
+                        ✕
+                    </button>
+                </td>
+
+                <td>—</td>
+
+                <td>—</td>
+
+                <td>—</td>
+
+                <td>—</td>
+
+                <td>
+                    Ana Torres
+                </td>
+            </tr>
+
+
+            <tr>
+                <td class="celda-hora-detalle">
+                    <a href="#">
+                        09:00 - 10:00
+                    </a>
+
+                    <button class="accion-editar"
+                            type="button"
+                            title="Editar reserva">
+                        ✎
+                    </button>
+                </td>
+
+                <td class="estado-detalle estado-ocupado-detalle">
+                    Ocupado
+                </td>
+
+                <td>
+                    18/09/2026 08:11
+                </td>
+
+                <td>—</td>
+
+                <td>
+                    <button class="accion-tabla"
+                            type="button">
+                        ✕
+                    </button>
+                </td>
+
+                <td>—</td>
+
+                <td>—</td>
+
+                <td>—</td>
+
+                <td>—</td>
+
+                <td>
+                    Bruno Salazar
+                </td>
+            </tr>
+
+
+            <tr class="reserva-resaltada">
+
+                <td class="celda-hora-detalle">
+
+                    <a href="#">
+                        10:00 - 12:00
+                    </a>
+
+                    <button class="accion-editar"
+                            type="button"
+                            title="Editar reserva">
+                        ✎
+                    </button>
+
+                </td>
+
+                <td class="estado-detalle estado-reservado-detalle">
+                    Reservado
+                </td>
+
+                <td>
+                    17/09/2026 21:15
+                </td>
+
+                <td>
+                    <button class="accion-tabla"
+                            type="button"
+                            title="Ocupar reserva completa">
+                        ✓
+                    </button>
+                </td>
+
+                <td>
+                    <button class="accion-tabla"
+                            type="button"
+                            title="Cancelar reserva">
+                        ✕
+                    </button>
+                </td>
+
+                <td>
+                    <button class="accion-tabla"
+                            type="button"
+                            title="Liberar reserva">
+                        🗑
+                    </button>
+                </td>
+
+                <td>—</td>
+
+                <td>—</td>
+
+                <td>—</td>
+
+                <td>
+                    Ana Torres
+                </td>
+
+            </tr>
+
+            <tr th:replace="~{fragments/integrantes-reserva :: integrantesReserva}">
+            </tr>
+
+
+            <tr>
+                <td class="celda-hora-detalle">
+                    12:00 - 13:00
+                </td>
+
+                <td class="estado-detalle estado-libre-detalle">
+                    Libre
+                </td>
+
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+            </tr>
+
+
+            <tr>
+                <td class="celda-hora-detalle">
+                    13:00 - 14:00
+                </td>
+
+                <td class="estado-detalle estado-libre-detalle">
+                    Libre
+                </td>
+
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+            </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+</section>
+
+</body>
+</html>

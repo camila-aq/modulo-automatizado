@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org">
+
+<body>
+
+<tr th:fragment="integrantesReserva"
+    class="fila-informacion-reserva">
+
+    <td colspan="10">
+
+        <div class="informacion-reserva">
+
+            <div class="informacion-reserva-titulo">
+                Información de Reserva
+            </div>
+
+            <div class="informacion-reserva-subtitulo">
+                Usuarios
+            </div>
+
+            <table class="tabla-integrantes">
+
+                <colgroup>
+                    <col class="col-integrante-nro">
+                    <col class="col-integrante-codigo">
+                    <col class="col-integrante-dni">
+                    <col class="col-integrante-nombre">
+                    <col class="col-integrante-rol">
+                    <col class="col-integrante-validacion">
+                </colgroup>
+
+                <thead>
+                <tr>
+                    <th>Nro.</th>
+                    <th>Código</th>
+                    <th>DNI</th>
+                    <th>Nombre</th>
+                    <th>Rol</th>
+                    <th>Validación</th>
+                </tr>
+                </thead>
+
+                <tbody>
+
+                <tr class="integrante-buscado">
+                    <td>1</td>
+                    <td>EST0000001</td>
+                    <td>10000001</td>
+                    <td>Ana Torres</td>
+                    <td>Responsable</td>
+
+                    <td>
+                        <span class="estado-ingreso estado-pendiente">
+                            Pendiente
+                        </span>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>2</td>
+                    <td>EST0000002</td>
+                    <td>10000002</td>
+                    <td>Bruno Salazar</td>
+                    <td>Integrante</td>
+
+                    <td>
+                        <span class="estado-ingreso estado-validado">
+                            Validado
+                        </span>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>3</td>
+                    <td>EST0000003</td>
+                    <td>10000003</td>
+                    <td>Carla Mendoza</td>
+                    <td>Integrante</td>
+
+                    <td>
+                        <span class="estado-ingreso estado-pendiente">
+                            Pendiente
+                        </span>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>4</td>
+                    <td>EST0000004</td>
+                    <td>10000004</td>
+                    <td>Diego Rojas</td>
+                    <td>Integrante</td>
+
+                    <td>
+                        <span class="estado-ingreso estado-pendiente">
+                            Pendiente
+                        </span>
+                    </td>
+                </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </td>
+
+</tr>
+
+</body>
+</html>
