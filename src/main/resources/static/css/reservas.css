@@ -137,12 +137,12 @@
     overflow: visible;
 }
 
-.tabla-reservas td {
+.tabla-reservas > #cuerpoGrillaReservas > tr > td {
     overflow: hidden;
     cursor: pointer;
 }
 
-.tabla-reservas td:hover {
+.tabla-reservas > #cuerpoGrillaReservas > tr > td:hover {
     outline: 2px solid #555555;
     outline-offset: -2px;
 }
@@ -156,17 +156,16 @@
     width: 5%;
 }
 
-.tabla-reservas tbody td:first-child {
-    background: #ffffff;
+.tabla-reservas > #cuerpoGrillaReservas > tr > td:first-child {
+    background: #dddddd;
     color: #222222;
 
-    font-size: clamp(8px, 0.65vw, 11px);
-    font-weight: 400;
+    font-weight: 600;
 
     cursor: default;
 }
 
-.tabla-reservas tbody td:first-child:hover {
+.tabla-reservas > #cuerpoGrillaReservas > tr > td:first-child:hover {
     outline: none;
 }
 
@@ -359,6 +358,39 @@
     }
 }
 
+/* =========================
+   Contenido interno del marco
+   ========================= */
+
+.fila-detalle-embebido > td {
+    padding: 0 !important;
+    border: 0 !important;
+
+    overflow: visible !important;
+
+    cursor: default !important;
+}
+
+.fila-detalle-embebido > td:hover {
+    outline: none !important;
+}
+
+
+/* Ambiente seleccionado */
+
+.encabezado-ambiente-activo {
+    background: #427f8f !important;
+    color: #ffffff !important;
+}
+
+
+/* El detalle ocupa exactamente
+   el interior del marco */
+
+.detalle-ambiente-general {
+    width: 100%;
+    margin: 0;
+}
 
 @media (max-width: 760px) {
 

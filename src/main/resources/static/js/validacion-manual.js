@@ -71,17 +71,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const cuerpoGrillaReservas =
         document.getElementById("cuerpoGrillaReservas");
 
-    const seccionReservas =
-        document.getElementById("seccionReservas");
-
-    const contenedorDetalleAmbienteGeneral =
+    const vistaDetalleAmbienteGeneral =
         document.getElementById(
-            "contenedorDetalleAmbienteGeneral"
+            "vistaDetalleAmbienteGeneral"
         );
 
-    const tabsAmbientesGeneral =
+    const celdaDetalleAmbienteGeneral =
         document.getElementById(
-            "tabsAmbientesGeneral"
+            "celdaDetalleAmbienteGeneral"
         );
 
     const tituloAmbienteGeneral =
@@ -668,6 +665,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 Todos
             </th>
         `;
+        encabezadoGrillaReservas
+            .querySelector(
+                ".encabezado-todos"
+            )
+            .addEventListener(
+                "click",
+                mostrarGrillaGeneral
+            );
 
         ambientes.forEach(
             ambiente => {
@@ -777,95 +782,30 @@ document.addEventListener("DOMContentLoaded", () => {
         ambientes
     ) {
 
-        seccionReservas.hidden =
+        cuerpoGrillaReservas.hidden =
             true;
+
+        vistaDetalleAmbienteGeneral.hidden =
+            false;
 
         contenedorDetalleReserva.hidden =
             true;
 
-        contenedorDetalleAmbienteGeneral.hidden =
-            false;
+        celdaDetalleAmbienteGeneral.colSpan =
+            ambientes.length + 1;
 
         tituloAmbienteGeneral.textContent =
             `${ambienteSeleccionado.codigo} - `
             + `${ambienteSeleccionado.nombre} - `
             + `${ambienteSeleccionado.piso}`;
 
-        construirTabsAmbientesGeneral(
-            ambienteSeleccionado,
-            ambientes
+        marcarAmbienteSeleccionado(
+            ambienteSeleccionado.idAmbiente
         );
 
         construirHorasAmbienteGeneral();
     }
 
-
-    function construirTabsAmbientesGeneral(
-        ambienteSeleccionado,
-        ambientes
-    ) {
-
-        tabsAmbientesGeneral.innerHTML =
-            "";
-
-        const botonTodos =
-            document.createElement("button");
-
-        botonTodos.type =
-            "button";
-
-        botonTodos.textContent =
-            "Todos";
-
-        botonTodos.addEventListener(
-            "click",
-            mostrarGrillaGeneral
-        );
-
-        tabsAmbientesGeneral.appendChild(
-            botonTodos
-        );
-
-
-        ambientes.forEach(
-            ambiente => {
-
-                const boton =
-                    document.createElement("button");
-
-                boton.type =
-                    "button";
-
-                boton.textContent =
-                    ambiente.abreviatura;
-
-                if (
-                    ambiente.idAmbiente
-                    === ambienteSeleccionado.idAmbiente
-                ) {
-
-                    boton.classList.add(
-                        "tab-activo"
-                    );
-                }
-
-                boton.addEventListener(
-                    "click",
-                    () => {
-
-                        mostrarDetalleAmbienteGeneral(
-                            ambiente,
-                            ambientes
-                        );
-                    }
-                );
-
-                tabsAmbientesGeneral.appendChild(
-                    boton
-                );
-            }
-        );
-    }
 
 
     function construirHorasAmbienteGeneral() {
@@ -912,14 +852,55 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function mostrarGrillaGeneral() {
 
-        contenedorDetalleAmbienteGeneral.hidden =
+        vistaDetalleAmbienteGeneral.hidden =
             true;
+
+        cuerpoGrillaReservas.hidden =
+            false;
 
         contenedorDetalleReserva.hidden =
             true;
 
-        seccionReservas.hidden =
-            false;
+        limpiarAmbienteSeleccionado();
+    }
+
+    function marcarAmbienteSeleccionado(
+        idAmbiente
+    ) {
+
+        const encabezados =
+            encabezadoGrillaReservas
+                .querySelectorAll(
+                    ".encabezado-ambiente"
+                );
+
+        encabezados.forEach(
+            encabezado => {
+
+                encabezado.classList.toggle(
+                    "encabezado-ambiente-activo",
+                    Number(
+                        encabezado.dataset.idAmbiente
+                    ) === idAmbiente
+                );
+            }
+        );
+    }
+
+    function limpiarAmbienteSeleccionado() {
+
+        encabezadoGrillaReservas
+            .querySelectorAll(
+                ".encabezado-ambiente-activo"
+            )
+            .forEach(
+                encabezado => {
+
+                    encabezado.classList.remove(
+                        "encabezado-ambiente-activo"
+                    );
+                }
+            );
     }
 
 });

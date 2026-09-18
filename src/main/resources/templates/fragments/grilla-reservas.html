@@ -88,7 +88,33 @@
 
             </thead>
 
+
+            <!-- =========================
+                 Vista general
+                 ========================= -->
+
             <tbody id="cuerpoGrillaReservas">
+            </tbody>
+
+
+            <!-- =========================
+                 Detalle de un ambiente
+                 ========================= -->
+
+            <tbody id="vistaDetalleAmbienteGeneral"
+                   hidden>
+
+            <tr class="fila-detalle-embebido">
+
+                <td id="celdaDetalleAmbienteGeneral">
+
+                    <div th:replace="~{fragments/detalle-ambiente-general :: detalleAmbienteGeneral}">
+                    </div>
+
+                </td>
+
+            </tr>
+
             </tbody>
 
         </table>
