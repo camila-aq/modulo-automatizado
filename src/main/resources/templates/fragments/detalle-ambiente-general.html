@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org">
+
+<body>
+
+<section th:fragment="detalleAmbienteGeneral"
+         class="detalle-ambiente detalle-ambiente-general">
+
+    <div id="tabsAmbientesGeneral"
+         class="tabs-ambientes">
+    </div>
+
+    <div id="tituloAmbienteGeneral"
+         class="titulo-detalle-ambiente">
+    </div>
+
+    <div class="tabla-scroll">
+
+        <table class="tabla-detalle-ambiente tabla-horarios">
+
+            <thead>
+
+            <tr>
+                <th>Hora</th>
+                <th>Estado</th>
+                <th>Fecha/hora de registro</th>
+                <th>Ocupar</th>
+                <th>Cancelar</th>
+                <th>Liberar</th>
+                <th>Materiales prestados</th>
+                <th>Recibir materiales</th>
+                <th>Observaciones</th>
+                <th>Responsable / Motivo</th>
+            </tr>
+
+            </thead>
+
+            <tbody id="cuerpoDetalleAmbienteGeneral">
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+</body>
+</html>

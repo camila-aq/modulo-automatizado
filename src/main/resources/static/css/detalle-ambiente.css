@@ -3,6 +3,10 @@
     margin-top: 24px;
 }
 
+.detalle-ambiente-general {
+    margin-top: 0;
+}
+
 
 /* =========================
    Pestañas de ambientes
@@ -71,23 +75,18 @@
 }
 
 .tabla-detalle-ambiente th {
-    padding: 5px 4px;
-    border: 1px solid #ffffff;
     background: #4d93a3;
     color: #ffffff;
+
     text-align: center;
-    font-size: clamp(8px, 0.68vw, 11px);
+
     font-weight: 500;
 }
 
 .tabla-detalle-ambiente td {
-    height: 28px;
-    padding: 3px 5px;
-    border: 1px solid #ffffff;
     background: #dedede;
+
     text-align: center;
-    vertical-align: middle;
-    font-size: clamp(8px, 0.68vw, 11px);
 }
 
 .tabla-detalle-ambiente tbody tr:nth-child(even) td {

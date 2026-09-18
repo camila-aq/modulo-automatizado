@@ -120,23 +120,13 @@
 .tabla-reservas th,
 .tabla-reservas td {
     min-width: 0;
-    height: 23px;
-    padding: 2px 3px;
-
     border: 1px solid #ffffff;
-
     text-align: center;
     vertical-align: middle;
-
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: clamp(9px, 0.72vw, 12px);
 }
 
 .tabla-reservas thead th {
     position: relative;
-
-    height: 23px;
-    padding: 3px;
 
     background: #dddddd;
     color: #111111;

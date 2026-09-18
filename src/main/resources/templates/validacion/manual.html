@@ -165,7 +165,17 @@
     </div>
 
 
-    <div id="contenedorDetalleReserva" hidden>
+    <div id="contenedorDetalleAmbienteGeneral"
+         hidden>
+
+        <div th:replace="~{fragments/detalle-ambiente-general :: detalleAmbienteGeneral}">
+        </div>
+
+    </div>
+
+
+    <div id="contenedorDetalleReserva"
+         hidden>
         <div th:replace="~{fragments/detalle-ambiente :: detalleAmbiente}"></div>
     </div>
 
