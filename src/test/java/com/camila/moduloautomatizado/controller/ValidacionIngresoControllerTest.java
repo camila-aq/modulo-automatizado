@@ -899,6 +899,7 @@ class ValidacionIngresoControllerTest {
                 "Torres"
         );
 
+
         ReservaUsuario reservaUsuario =
                 new ReservaUsuario();
 
@@ -906,9 +907,13 @@ class ValidacionIngresoControllerTest {
                 1
         );
 
+
         DetalleReservaManualResponse detalle =
                 new DetalleReservaManualResponse(
                         1,
+                        10,
+                        20,
+                        30,
                         "RES-SIM-001",
                         "AMB-SIM-001",
                         "Sala de Estudio 101",
@@ -955,6 +960,7 @@ class ValidacionIngresoControllerTest {
                         )
                 );
 
+
         when(
                 validacionIngresoService
                         .identificarUsuarioPorDni(
@@ -963,6 +969,7 @@ class ValidacionIngresoControllerTest {
         ).thenReturn(
                 usuario
         );
+
 
         when(
                 validacionIngresoService
@@ -973,6 +980,7 @@ class ValidacionIngresoControllerTest {
                 reservaUsuario
         );
 
+
         when(
                 validacionIngresoService
                         .obtenerDetalleReservaManual(
@@ -981,6 +989,7 @@ class ValidacionIngresoControllerTest {
         ).thenReturn(
                 detalle
         );
+
 
         mockMvc.perform(
                         get(
@@ -1001,6 +1010,18 @@ class ValidacionIngresoControllerTest {
                 .andExpect(
                         jsonPath("$.idReservaUsuarioBuscado")
                                 .value(1)
+                )
+                .andExpect(
+                        jsonPath("$.idReserva")
+                                .value(10)
+                )
+                .andExpect(
+                        jsonPath("$.idUbicacion")
+                                .value(20)
+                )
+                .andExpect(
+                        jsonPath("$.idAmbiente")
+                                .value(30)
                 )
                 .andExpect(
                         jsonPath("$.codigoReserva")
@@ -1031,6 +1052,14 @@ class ValidacionIngresoControllerTest {
                                 .value(2)
                 )
                 .andExpect(
+                        jsonPath("$.integrantes[0].idReservaUsuario")
+                                .value(1)
+                )
+                .andExpect(
+                        jsonPath("$.integrantes[0].codigoUniversitario")
+                                .value("EST0000001")
+                )
+                .andExpect(
                         jsonPath("$.integrantes[0].dni")
                                 .value("10000001")
                 )
@@ -1051,8 +1080,28 @@ class ValidacionIngresoControllerTest {
                                 .value(false)
                 )
                 .andExpect(
+                        jsonPath("$.integrantes[1].idReservaUsuario")
+                                .value(2)
+                )
+                .andExpect(
+                        jsonPath("$.integrantes[1].codigoUniversitario")
+                                .value("EST0000002")
+                )
+                .andExpect(
+                        jsonPath("$.integrantes[1].dni")
+                                .value("10000002")
+                )
+                .andExpect(
                         jsonPath("$.integrantes[1].nombres")
                                 .value("Bruno")
+                )
+                .andExpect(
+                        jsonPath("$.integrantes[1].apellidos")
+                                .value("Salazar")
+                )
+                .andExpect(
+                        jsonPath("$.integrantes[1].rolEnReserva")
+                                .value("INTEGRANTE")
                 )
                 .andExpect(
                         jsonPath("$.integrantes[1].validado")

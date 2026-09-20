@@ -137,19 +137,8 @@ public class ValidacionIngresoService {
     public DetalleReservaManualResponse obtenerDetalleReservaManual(
             ReservaUsuario reservaUsuarioBuscado) {
 
-        ReservaUsuario reservaUsuarioGestionado =
-                reservaUsuarioRepository
-                        .findById(
-                                reservaUsuarioBuscado.getIdReservaUsuario()
-                        )
-                        .orElseThrow(() ->
-                                new IllegalArgumentException(
-                                        "No se encontró la asociación del usuario con la reserva."
-                                )
-                        );
-
         Reserva reserva =
-                reservaUsuarioGestionado.getReserva();
+                reservaUsuarioBuscado.getReserva();
 
         List<ReservaUsuario> integrantes =
                 reservaUsuarioRepository
@@ -183,10 +172,18 @@ public class ValidacionIngresoService {
                         .toList();
 
         return new DetalleReservaManualResponse(
-                reservaUsuarioGestionado.getIdReservaUsuario(),
+                reservaUsuarioBuscado.getIdReservaUsuario(),
+                reserva.getIdReserva(),
+                reserva.getAmbiente()
+                        .getUbicacion()
+                        .getIdUbicacion(),
+                reserva.getAmbiente()
+                        .getIdAmbiente(),
                 reserva.getCodigoReserva(),
-                reserva.getAmbiente().getCodigo(),
-                reserva.getAmbiente().getNombre(),
+                reserva.getAmbiente()
+                        .getCodigo(),
+                reserva.getAmbiente()
+                        .getNombre(),
                 reserva.getFechaHoraInicio(),
                 reserva.getFechaHoraFin(),
                 reserva.getFechaCreacion(),

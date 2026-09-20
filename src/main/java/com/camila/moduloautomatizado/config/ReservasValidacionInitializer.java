@@ -251,7 +251,7 @@ public class ReservasValidacionInitializer
                         .withNano(0);
 
         LocalDateTime fin =
-                inicio.plusHours(2);
+                inicio.plusHours(3);
 
         Reserva reserva =
                 reservaRepository

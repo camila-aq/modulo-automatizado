@@ -5,6 +5,9 @@ import java.util.List;
 
 public record DetalleReservaManualResponse(
         Integer idReservaUsuarioBuscado,
+        Integer idReserva,
+        Integer idUbicacion,
+        Integer idAmbiente,
         String codigoReserva,
         String codigoAmbiente,
         String nombreAmbiente,
