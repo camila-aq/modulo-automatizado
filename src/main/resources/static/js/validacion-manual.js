@@ -188,6 +188,11 @@ document.addEventListener("DOMContentLoaded", () => {
         cerrarModalValidacion
     );
 
+    botonConfirmarValidacion.addEventListener(
+        "click",
+        confirmarValidacionIngreso
+    );
+
 
     modalConfirmarValidacion.addEventListener(
         "click",
@@ -242,6 +247,137 @@ document.addEventListener("DOMContentLoaded", () => {
     function cerrarModalValidacion() {
 
         modalConfirmarValidacion.hidden = true;
+    }
+
+    async function confirmarValidacionIngreso() {
+
+        const identificador =
+            obtenerIdentificadorActual();
+
+        if (!identificador) {
+            cerrarModalValidacion();
+            return;
+        }
+
+        botonConfirmarValidacion.disabled =
+            true;
+
+        try {
+
+            /*
+             * 1. Localizamos la reserva vigente del usuario identificado.
+             */
+            const parametros =
+                new URLSearchParams({
+                    tipo: identificador.tipo,
+                    valor: identificador.valor
+                });
+
+            const respuestaDetalle =
+                await fetch(
+                    "/api/validaciones-ingreso/manual/detalle?"
+                    + parametros.toString()
+                );
+
+            const detalle =
+                await respuestaDetalle.json();
+
+            if (!respuestaDetalle.ok) {
+
+                throw new Error(
+                    detalle.mensaje
+                    || "No fue posible localizar la reserva."
+                );
+            }
+
+
+            /*
+             * 2. Registramos únicamente la validación del usuario identificado.
+             */
+            const respuestaValidacion =
+                await fetch(
+                    "/api/validaciones-ingreso/manual/confirmar",
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body: JSON.stringify({
+                            idReservaUsuario:
+                            detalle.idReservaUsuarioBuscado,
+
+                            tipoIdentificador:
+                            identificador.tipo
+                        })
+                    }
+                );
+
+            const validacion =
+                await respuestaValidacion.json();
+
+            if (!respuestaValidacion.ok) {
+
+                throw new Error(
+                    validacion.mensaje
+                    || "No fue posible validar el ingreso."
+                );
+            }
+
+
+            /*
+             * 3. Consultamos nuevamente el detalle.
+             * Ahora el integrante debe venir con validado = true.
+             */
+            const respuestaActualizada =
+                await fetch(
+                    "/api/validaciones-ingreso/manual/detalle?"
+                    + parametros.toString()
+                );
+
+            const detalleActualizado =
+                await respuestaActualizada.json();
+
+            if (!respuestaActualizada.ok) {
+
+                throw new Error(
+                    detalleActualizado.mensaje
+                    || "El ingreso fue validado, pero no fue posible actualizar la vista."
+                );
+            }
+
+
+            /*
+             * 4. Cerramos el modal y usamos exactamente el mismo flujo visual
+             * de Buscar reserva.
+             */
+            cerrarModalValidacion();
+
+            await mostrarReservaEncontrada(
+                detalleActualizado
+            );
+
+            mostrarMensaje(
+                "Ingreso validado correctamente.",
+                "exito"
+            );
+
+        } catch (error) {
+
+            cerrarModalValidacion();
+
+            mostrarMensaje(
+                error.message,
+                "error"
+            );
+
+        } finally {
+
+            botonConfirmarValidacion.disabled =
+                false;
+        }
     }
 
 
@@ -1098,9 +1234,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         cuerpoGrillaReservas.hidden =
             false;
-
-        contenedorDetalleReserva.hidden =
-            true;
 
         limpiarAmbienteSeleccionado();
     }

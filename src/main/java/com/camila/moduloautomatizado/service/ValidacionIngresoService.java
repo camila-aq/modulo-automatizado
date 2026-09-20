@@ -13,6 +13,7 @@ import com.camila.moduloautomatizado.model.entity.ValidacionIngreso;
 import com.camila.moduloautomatizado.model.enums.EstadoReserva;
 import com.camila.moduloautomatizado.model.enums.MedioValidacion;
 import com.camila.moduloautomatizado.model.enums.TipoIdentificador;
+import com.camila.moduloautomatizado.model.rule.ReglasControlOcupacion;
 import com.camila.moduloautomatizado.dto.DetalleReservaManualResponse;
 import com.camila.moduloautomatizado.dto.IntegranteReservaResponse;
 
@@ -137,8 +138,19 @@ public class ValidacionIngresoService {
     public DetalleReservaManualResponse obtenerDetalleReservaManual(
             ReservaUsuario reservaUsuarioBuscado) {
 
+        ReservaUsuario reservaUsuarioGestionado =
+                reservaUsuarioRepository
+                        .findById(
+                                reservaUsuarioBuscado.getIdReservaUsuario()
+                        )
+                        .orElseThrow(() ->
+                                new IllegalArgumentException(
+                                        "No se encontró la asociación del usuario con la reserva."
+                                )
+                        );
+
         Reserva reserva =
-                reservaUsuarioBuscado.getReserva();
+                reservaUsuarioGestionado.getReserva();
 
         List<ReservaUsuario> integrantes =
                 reservaUsuarioRepository
@@ -172,7 +184,7 @@ public class ValidacionIngresoService {
                         .toList();
 
         return new DetalleReservaManualResponse(
-                reservaUsuarioBuscado.getIdReservaUsuario(),
+                reservaUsuarioGestionado.getIdReservaUsuario(),
                 reserva.getIdReserva(),
                 reserva.getAmbiente()
                         .getUbicacion()
@@ -314,20 +326,36 @@ public class ValidacionIngresoService {
             ReservaUsuario reservaUsuario,
             LocalDateTime momento) {
 
-        Reserva reserva = reservaUsuario.getReserva();
+        Reserva reserva =
+                reservaUsuario.getReserva();
+
+        LocalDateTime inicioValidacion =
+                reserva.getFechaHoraInicio()
+                        .minusMinutes(
+                                ReglasControlOcupacion
+                                        .MINUTOS_ANTICIPACION
+                        );
 
         boolean dentroDelHorario =
-                !momento.isBefore(reserva.getFechaHoraInicio())
-                        && !momento.isAfter(reserva.getFechaHoraFin());
+                !momento.isBefore(
+                        inicioValidacion
+                )
+                        &&
+                        momento.isBefore(
+                                reserva.getFechaHoraFin()
+                        );
 
         if (!dentroDelHorario) {
             return false;
         }
 
         return reservaEstadoRepository
-                .findTopByReservaOrderByFechaHoraEstadoDesc(reserva)
+                .findTopByReservaOrderByFechaHoraEstadoDesc(
+                        reserva
+                )
                 .map(estado ->
-                        estado.getEstadoReserva() == EstadoReserva.VIGENTE
+                        estado.getEstadoReserva()
+                                == EstadoReserva.VIGENTE
                 )
                 .orElse(false);
     }
