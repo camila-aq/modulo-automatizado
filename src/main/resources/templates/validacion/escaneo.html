@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Simulación de escaneo</title>
+
+    <link rel="stylesheet"
+          th:href="@{/css/base.css}">
+
+    <link rel="stylesheet"
+          th:href="@{/css/validacion-manual.css}">
+
+    <link rel="stylesheet"
+          th:href="@{/css/componentes.css}">
+</head>
+
+<body>
+
+<div th:replace="~{fragments/menu-administrador :: barraSuperior}">
+</div>
+
+
+<main class="contenedor-principal">
+
+    <section class="fila-cabecera-pagina">
+
+        <div class="cabecera-pagina">
+
+            <h1>
+                Gestión de reservas de ambientes de estudio
+            </h1>
+
+            <p>
+                Simulación de validación por escaneo
+            </p>
+
+        </div>
+
+        <div th:replace="~{fragments/menu-administrador :: menuAdministrador}">
+        </div>
+
+    </section>
+
+
+    <section class="panel panel-identificacion">
+
+        <div class="panel-titulo">
+            Punto de validación
+        </div>
+
+        <div class="panel-contenido">
+
+            <div class="formulario-identificacion">
+
+                <div class="campo-formulario">
+
+                    <label for="codigoPunto">
+                        Código del punto
+                    </label>
+
+                    <input
+                            id="codigoPunto"
+                            type="text"
+                            maxlength="30"
+                            autocomplete="off"
+                            placeholder="Ej. PVAL-CCSS-005">
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <section class="panel panel-identificacion">
+
+        <div class="panel-titulo">
+            Escaneo de documento
+        </div>
+
+        <div class="panel-contenido">
+
+            <div class="formulario-identificacion">
+
+                <div class="campo-formulario">
+
+                    <label for="dniEscaneado">
+                        DNI detectado
+                    </label>
+
+                    <input
+                            id="dniEscaneado"
+                            type="text"
+                            maxlength="8"
+                            autocomplete="off"
+                            placeholder="Escanee o ingrese el DNI">
+
+                </div>
+
+            </div>
+
+
+            <div class="acciones-formulario">
+
+                <button
+                        id="botonEscanear"
+                        class="boton boton-validar-ingreso"
+                        type="button"
+                        disabled>
+
+                    Simular escaneo
+
+                </button>
+
+                <button
+                        id="botonLimpiarEscaneo"
+                        class="boton boton-secundario"
+                        type="button">
+
+                    Limpiar
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <section
+            id="resultadoEscaneo"
+            class="panel panel-identificacion"
+            hidden>
+
+        <div class="panel-titulo">
+            Resultado de validación
+        </div>
+
+        <div class="panel-contenido">
+
+            <div class="usuario-identificado">
+
+                <span class="usuario-etiqueta">
+                    Estado:
+                </span>
+
+                <span id="estadoEscaneo">
+                    —
+                </span>
+
+            </div>
+
+
+            <div class="usuario-identificado">
+
+                <span class="usuario-etiqueta">
+                    DNI:
+                </span>
+
+                <span id="resultadoDni">
+                    —
+                </span>
+
+            </div>
+
+
+            <div class="usuario-identificado">
+
+                <span class="usuario-etiqueta">
+                    ID validación:
+                </span>
+
+                <span id="resultadoIdValidacion">
+                    —
+                </span>
+
+            </div>
+
+
+            <div class="usuario-identificado">
+
+                <span class="usuario-etiqueta">
+                    Punto:
+                </span>
+
+                <span id="resultadoPunto">
+                    —
+                </span>
+
+            </div>
+
+
+            <div class="usuario-identificado">
+
+                <span class="usuario-etiqueta">
+                    Medio:
+                </span>
+
+                <span id="resultadoMedio">
+                    —
+                </span>
+
+            </div>
+
+
+            <div class="usuario-identificado">
+
+                <span class="usuario-etiqueta">
+                    Fecha y hora:
+                </span>
+
+                <span id="resultadoFechaHora">
+                    —
+                </span>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <div
+            id="mensajeEscaneo"
+            class="mensaje"
+            hidden>
+    </div>
+
+</main>
+
+
+<script
+        src="/js/validacion-escaneo.js"
+        defer>
+</script>
+
+</body>
+</html>
