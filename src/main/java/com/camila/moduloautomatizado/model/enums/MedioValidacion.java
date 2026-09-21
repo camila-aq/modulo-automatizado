@@ -2,5 +2,6 @@ package com.camila.moduloautomatizado.model.enums;
 
 public enum MedioValidacion {
     ESCANEO_SIMULADO,
-    INGRESO_MANUAL
+    INGRESO_MANUAL,
+    OCUPACION_MANUAL
 }

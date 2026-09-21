@@ -979,12 +979,23 @@ document.addEventListener("DOMContentLoaded", () => {
                         }
 
                         celda.classList.remove(
-                            "estado-libre"
+                            "estado-libre",
+                            "estado-reservado",
+                            "estado-ocupado"
                         );
 
-                        celda.classList.add(
-                            "estado-reservado"
-                        );
+                        if (reserva.estado === "OCUPADO") {
+
+                            celda.classList.add(
+                                "estado-ocupado"
+                            );
+
+                        } else {
+
+                            celda.classList.add(
+                                "estado-reservado"
+                            );
+                        }
 
                         celda.dataset.idReserva =
                             reserva.idReserva;
@@ -1123,58 +1134,97 @@ document.addEventListener("DOMContentLoaded", () => {
                 fila.dataset.idReserva =
                     reserva.idReserva;
 
+                const reservaOcupada =
+                    reserva.estado === "OCUPADO";
+
+                const claseEstado =
+                    reservaOcupada
+                        ? "estado-ocupado-detalle"
+                        : "estado-reservado-detalle";
+
+                const textoEstado =
+                    reservaOcupada
+                        ? "Ocupado"
+                        : "Reservado";
+
                 fila.innerHTML = `
-                <td class="celda-hora-detalle">
-                    ${horaInicio} - ${horaFin}
-                </td>
+                    <td class="celda-hora-detalle">
+                        ${horaInicio} - ${horaFin}
+                    </td>
+    
+                    <td class="estado-detalle ${claseEstado}">
+                        ${textoEstado}
+                    </td>
+    
+                    <td>
+                        ${formatearFechaHora(
+                        reserva.fechaHoraRegistro
+                    )}
+                    </td>
+    
+                    <td>
+                        <button
+                            class="accion-tabla boton-ocupar-reserva"
+                            type="button"
+                            title="Ocupar reserva"
+                            ${reservaOcupada ? "disabled" : ""}>
+                            ✓
+                        </button>
+                    </td>
+    
+                    <td>
+                        <button
+                            class="accion-tabla"
+                            type="button"
+                            title="Cancelar reserva">
+                            ✕
+                        </button>
+                    </td>
+    
+                    <td>
+                        <button
+                            class="accion-tabla"
+                            type="button"
+                            title="Liberar reserva">
+                            🗑
+                        </button>
+                    </td>
+    
+                    <td>—</td>
+    
+                    <td>—</td>
+    
+                    <td>—</td>
+    
+                    <td>
+                        ${reserva.responsable}
+                    </td>
+                `;
 
-                <td class="estado-detalle estado-reservado-detalle">
-                    Reservado
-                </td>
+                const botonOcupar =
+                    fila.querySelector(
+                        ".boton-ocupar-reserva"
+                    );
 
-                <td>
-                    ${formatearFechaHora(
-                    reserva.fechaHoraRegistro
-                )}
-                </td>
+                if (
+                    botonOcupar
+                    &&
+                    !reservaOcupada
+                ) {
 
-                <td>
-                    <button
-                        class="accion-tabla"
-                        type="button"
-                        title="Ocupar reserva">
-                        ✓
-                    </button>
-                </td>
+                    botonOcupar.addEventListener(
+                        "click",
+                        async evento => {
 
-                <td>
-                    <button
-                        class="accion-tabla"
-                        type="button"
-                        title="Cancelar reserva">
-                        ✕
-                    </button>
-                </td>
+                            evento.stopPropagation();
 
-                <td>
-                    <button
-                        class="accion-tabla"
-                        type="button"
-                        title="Liberar reserva">
-                        🗑
-                    </button>
-                </td>
-
-                <td>—</td>
-
-                <td>—</td>
-
-                <td>—</td>
-
-                <td>
-                    ${reserva.responsable}
-                </td>
-            `;
+                            await ocuparReservaManual(
+                                reserva.idReserva,
+                                ambienteSeleccionado
+                            );
+                        }
+                    );
+                }
 
 
                 fila.addEventListener(
@@ -1199,23 +1249,23 @@ document.addEventListener("DOMContentLoaded", () => {
             } else {
 
                 fila.innerHTML = `
-                <td class="celda-hora-detalle">
-                    ${horaInicio} - ${horaFin}
-                </td>
-
-                <td class="estado-detalle estado-libre-detalle">
-                    Libre
-                </td>
-
-                <td>—</td>
-                <td>—</td>
-                <td>—</td>
-                <td>—</td>
-                <td>—</td>
-                <td>—</td>
-                <td>—</td>
-                <td>—</td>
-            `;
+                    <td class="celda-hora-detalle">
+                        ${horaInicio} - ${horaFin}
+                    </td>
+    
+                    <td class="estado-detalle estado-libre-detalle">
+                        Libre
+                    </td>
+    
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                `;
             }
 
 
@@ -1479,6 +1529,96 @@ document.addEventListener("DOMContentLoaded", () => {
             );
 
             ocultarMensaje();
+
+        } catch (error) {
+
+            mostrarMensaje(
+                error.message,
+                "error"
+            );
+        }
+    }
+
+    async function ocuparReservaManual(
+        idReserva,
+        ambienteSeleccionado) {
+
+        const confirmado =
+            window.confirm(
+                "¿Está seguro de ocupar esta reserva? "
+                + "Todos sus integrantes serán registrados como validados."
+            );
+
+        if (!confirmado) {
+            return;
+        }
+
+        try {
+
+            const respuesta =
+                await fetch(
+                    `/api/reservas/${idReserva}/ocupar`,
+                    {
+                        method: "POST"
+                    }
+                );
+
+            const datos =
+                await respuesta.json();
+
+            if (!respuesta.ok) {
+
+                throw new Error(
+                    datos.mensaje
+                    || datos.message
+                    || "No fue posible ocupar la reserva."
+                );
+            }
+
+
+            /*
+             * Recargamos datos para obtener
+             * el nuevo estado OCUPADO.
+             */
+            await cargarGrillaCatalogo();
+
+
+            const ambienteActual =
+                ambientesCargados.find(
+                    ambiente =>
+                        ambiente.idAmbiente
+                        === ambienteSeleccionado.idAmbiente
+                );
+
+            if (ambienteActual) {
+
+                mostrarDetalleAmbienteGeneral(
+                    ambienteActual,
+                    ambientesCargados
+                );
+
+
+                const filaActual =
+                    cuerpoDetalleAmbienteGeneral
+                        .querySelector(
+                            `tr[data-id-reserva="${idReserva}"]`
+                        );
+
+                if (filaActual) {
+
+                    await mostrarIntegrantesReservaGrilla(
+                        idReserva,
+                        filaActual
+                    );
+                }
+            }
+
+
+            mostrarMensaje(
+                "Reserva ocupada correctamente. "
+                + "Todos los integrantes fueron registrados como validados.",
+                "exito"
+            );
 
         } catch (error) {
 

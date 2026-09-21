@@ -6,10 +6,13 @@ import com.camila.moduloautomatizado.model.entity.Reserva;
 import com.camila.moduloautomatizado.model.entity.ReservaEstado;
 import com.camila.moduloautomatizado.model.entity.ReservaUsuario;
 import com.camila.moduloautomatizado.model.entity.Usuario;
+
 import com.camila.moduloautomatizado.model.enums.EstadoReserva;
 import com.camila.moduloautomatizado.model.enums.RolEnReserva;
 import com.camila.moduloautomatizado.model.enums.RolUsuario;
+
 import com.camila.moduloautomatizado.model.rule.ReglasControlOcupacion;
+
 import com.camila.moduloautomatizado.repository.AmbienteRepository;
 import com.camila.moduloautomatizado.repository.PuntoValidacionRepository;
 import com.camila.moduloautomatizado.repository.ReservaEstadoRepository;
@@ -32,11 +35,17 @@ public class ReservasValidacionInitializer
         implements CommandLineRunner {
 
     private final UsuarioRepository usuarioRepository;
+
     private final AmbienteRepository ambienteRepository;
+
     private final PuntoValidacionRepository puntoValidacionRepository;
+
     private final ReservaRepository reservaRepository;
+
     private final ReservaUsuarioRepository reservaUsuarioRepository;
+
     private final ReservaEstadoRepository reservaEstadoRepository;
+
 
     public ReservasValidacionInitializer(
             UsuarioRepository usuarioRepository,
@@ -46,35 +55,63 @@ public class ReservasValidacionInitializer
             ReservaUsuarioRepository reservaUsuarioRepository,
             ReservaEstadoRepository reservaEstadoRepository) {
 
-        this.usuarioRepository = usuarioRepository;
-        this.ambienteRepository = ambienteRepository;
-        this.puntoValidacionRepository = puntoValidacionRepository;
-        this.reservaRepository = reservaRepository;
-        this.reservaUsuarioRepository = reservaUsuarioRepository;
-        this.reservaEstadoRepository = reservaEstadoRepository;
+        this.usuarioRepository =
+                usuarioRepository;
+
+        this.ambienteRepository =
+                ambienteRepository;
+
+        this.puntoValidacionRepository =
+                puntoValidacionRepository;
+
+        this.reservaRepository =
+                reservaRepository;
+
+        this.reservaUsuarioRepository =
+                reservaUsuarioRepository;
+
+        this.reservaEstadoRepository =
+                reservaEstadoRepository;
     }
+
 
     @Override
     public void run(String... args) {
 
+        crearReservaValidacionIndividual();
+
+        crearReservaOcupacionManual();
+
+        crearReservaPruebaTres();
+
+
         /*
-         * La reserva de prueba se ubicará en S1-03,
-         * correspondiente al Ambiente 3 del
-         * Complejo de Ciencias Sociales.
+         * FUTURAS RESERVAS:
+         *
+         * crearReservaPruebaTres();
+         * crearReservaPruebaCuatro();
          */
+    }
+
+
+    /* =========================================================
+       RESERVA 1
+       Validación individual de integrantes
+       ========================================================= */
+
+    private void crearReservaValidacionIndividual() {
+
         Ambiente ambiente =
-                ambienteRepository
-                        .findByCodigo("CCSS-AMB-003")
-                        .orElseThrow(() ->
-                                new IllegalStateException(
-                                        "No existe el ambiente CCSS-AMB-003. "
-                                                + "Ejecute primero DatosReservasInitializer."
-                                )
-                        );
+                obtenerAmbiente(
+                        "CCSS-AMB-003"
+                );
+
 
         crearPuntoValidacion(
-                ambiente
+                ambiente,
+                "PVAL-CCSS-003"
         );
+
 
         Usuario laura =
                 crearEstudiante(
@@ -85,6 +122,7 @@ public class ReservasValidacionInitializer
                         "laura.medina@simulado.example"
                 );
 
+
         Usuario marco =
                 crearEstudiante(
                         "ESTCCSS002",
@@ -93,6 +131,7 @@ public class ReservasValidacionInitializer
                         "Ruiz",
                         "marco.ruiz@simulado.example"
                 );
+
 
         Usuario paula =
                 crearEstudiante(
@@ -103,10 +142,13 @@ public class ReservasValidacionInitializer
                         "paula.soto@simulado.example"
                 );
 
+
         Reserva reserva =
                 crearReserva(
-                        ambiente
+                        ambiente,
+                        "RES-CCSS-001"
                 );
+
 
         crearReservaUsuario(
                 reserva,
@@ -114,11 +156,13 @@ public class ReservasValidacionInitializer
                 RolEnReserva.RESPONSABLE
         );
 
+
         crearReservaUsuario(
                 reserva,
                 marco,
                 RolEnReserva.INTEGRANTE
         );
+
 
         crearReservaUsuario(
                 reserva,
@@ -126,10 +170,116 @@ public class ReservasValidacionInitializer
                 RolEnReserva.INTEGRANTE
         );
 
+
         crearEstadoInicial(
                 reserva
         );
     }
+
+
+    /* =========================================================
+       RESERVA 2
+       Prueba de ocupación manual completa
+       ========================================================= */
+
+    private void crearReservaOcupacionManual() {
+
+        Ambiente ambiente =
+                obtenerAmbiente(
+                        "CCSS-AMB-004"
+                );
+
+
+        crearPuntoValidacion(
+                ambiente,
+                "PVAL-CCSS-004"
+        );
+
+
+        Usuario daniela =
+                crearEstudiante(
+                        "ESTCCSS004",
+                        "21000004",
+                        "Daniela",
+                        "Rojas",
+                        "daniela.rojas@simulado.example"
+                );
+
+
+        Usuario luis =
+                crearEstudiante(
+                        "ESTCCSS005",
+                        "21000005",
+                        "Luis",
+                        "Vega",
+                        "luis.vega@simulado.example"
+                );
+
+
+        Usuario sofia =
+                crearEstudiante(
+                        "ESTCCSS006",
+                        "21000006",
+                        "Sofía",
+                        "Castro",
+                        "sofia.castro@simulado.example"
+                );
+
+
+        Reserva reserva =
+                crearReserva(
+                        ambiente,
+                        "RES-CCSS-002"
+                );
+
+
+        crearReservaUsuario(
+                reserva,
+                daniela,
+                RolEnReserva.RESPONSABLE
+        );
+
+
+        crearReservaUsuario(
+                reserva,
+                luis,
+                RolEnReserva.INTEGRANTE
+        );
+
+
+        crearReservaUsuario(
+                reserva,
+                sofia,
+                RolEnReserva.INTEGRANTE
+        );
+
+
+        crearEstadoInicial(
+                reserva
+        );
+    }
+
+
+    /* =========================================================
+       MÉTODOS AUXILIARES REUTILIZABLES
+       ========================================================= */
+
+    private Ambiente obtenerAmbiente(
+            String codigoAmbiente) {
+
+        return ambienteRepository
+                .findByCodigo(
+                        codigoAmbiente
+                )
+                .orElseThrow(() ->
+                        new IllegalStateException(
+                                "No existe el ambiente "
+                                        + codigoAmbiente
+                                        + ". Ejecute primero DatosReservasInitializer."
+                        )
+                );
+    }
+
 
     private Usuario crearEstudiante(
             String codigoUniversitario,
@@ -192,12 +342,14 @@ public class ReservasValidacionInitializer
                 });
     }
 
+
     private PuntoValidacion crearPuntoValidacion(
-            Ambiente ambiente) {
+            Ambiente ambiente,
+            String codigoPunto) {
 
         return puntoValidacionRepository
                 .findByCodigoPunto(
-                        "PVAL-CCSS-003"
+                        codigoPunto
                 )
                 .orElseGet(() -> {
 
@@ -212,7 +364,7 @@ public class ReservasValidacionInitializer
                     );
 
                     punto.setCodigoPunto(
-                            "PVAL-CCSS-003"
+                            codigoPunto
                     );
 
                     punto.setActivo(
@@ -233,16 +385,25 @@ public class ReservasValidacionInitializer
                 });
     }
 
+
     private Reserva crearReserva(
-            Ambiente ambiente) {
+            Ambiente ambiente,
+            String codigoReserva) {
 
         LocalDateTime momento =
                 LocalDateTime.now();
 
+
         /*
-         * Se mantiene vigente para las pruebas:
-         * comienza al inicio de la hora actual
-         * y dura dos horas.
+         * La reserva siempre inicia al comienzo
+         * exacto de la hora actual.
+         *
+         * Ejemplo:
+         *
+         * aplicación iniciada a las 17:07
+         *
+         * inicio = 17:00
+         * fin    = 19:00
          */
         LocalDateTime inicio =
                 momento
@@ -250,13 +411,17 @@ public class ReservasValidacionInitializer
                         .withSecond(0)
                         .withNano(0);
 
+
         LocalDateTime fin =
-                inicio.plusHours(2);
+                inicio.plusHours(
+                        2
+                );
+
 
         Reserva reserva =
                 reservaRepository
                         .findByCodigoReserva(
-                                "RES-CCSS-001"
+                                codigoReserva
                         )
                         .orElseGet(() -> {
 
@@ -264,7 +429,7 @@ public class ReservasValidacionInitializer
                                     new Reserva();
 
                             nuevaReserva.setCodigoReserva(
-                                    "RES-CCSS-001"
+                                    codigoReserva
                             );
 
                             nuevaReserva.setAmbiente(
@@ -287,6 +452,14 @@ public class ReservasValidacionInitializer
                             return nuevaReserva;
                         });
 
+
+        /*
+         * Se actualizan siempre las horas
+         * cuando se activa el initializer.
+         *
+         * Así la reserva queda vigente para
+         * las pruebas actuales.
+         */
         reserva.setAmbiente(
                 ambiente
         );
@@ -299,10 +472,12 @@ public class ReservasValidacionInitializer
                 fin
         );
 
+
         return reservaRepository.save(
                 reserva
         );
     }
+
 
     private ReservaUsuario crearReservaUsuario(
             Reserva reserva,
@@ -352,6 +527,7 @@ public class ReservasValidacionInitializer
                 });
     }
 
+
     private ReservaEstado crearEstadoInicial(
             Reserva reserva) {
 
@@ -395,5 +571,73 @@ public class ReservasValidacionInitializer
                             estado
                     );
                 });
+    }
+
+    private void crearReservaPruebaTres() {
+
+        Ambiente ambiente =
+                obtenerAmbiente(
+                        "CCSS-AMB-005"
+                );
+
+        crearPuntoValidacion(
+                ambiente,
+                "PVAL-CCSS-005"
+        );
+
+        Usuario usuario1 =
+                crearEstudiante(
+                        "ESTCCSS007",
+                        "21000007",
+                        "Nombre1",
+                        "Apellido1",
+                        "usuario1@simulado.example"
+                );
+
+        Usuario usuario2 =
+                crearEstudiante(
+                        "ESTCCSS008",
+                        "21000008",
+                        "Nombre2",
+                        "Apellido2",
+                        "usuario2@simulado.example"
+                );
+
+        Usuario usuario3 =
+                crearEstudiante(
+                        "ESTCCSS009",
+                        "21000009",
+                        "Nombre3",
+                        "Apellido3",
+                        "usuario3@simulado.example"
+                );
+
+        Reserva reserva =
+                crearReserva(
+                        ambiente,
+                        "RES-CCSS-003"
+                );
+
+        crearReservaUsuario(
+                reserva,
+                usuario1,
+                RolEnReserva.RESPONSABLE
+        );
+
+        crearReservaUsuario(
+                reserva,
+                usuario2,
+                RolEnReserva.INTEGRANTE
+        );
+
+        crearReservaUsuario(
+                reserva,
+                usuario3,
+                RolEnReserva.INTEGRANTE
+        );
+
+        crearEstadoInicial(
+                reserva
+        );
     }
 }

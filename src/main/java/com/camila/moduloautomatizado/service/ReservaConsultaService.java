@@ -2,13 +2,17 @@ package com.camila.moduloautomatizado.service;
 
 import com.camila.moduloautomatizado.model.entity.Reserva;
 import com.camila.moduloautomatizado.model.entity.ReservaUsuario;
+import com.camila.moduloautomatizado.model.entity.Usuario;
+import com.camila.moduloautomatizado.model.entity.ControlOcupacion;
 import com.camila.moduloautomatizado.model.enums.EstadoReserva;
 import com.camila.moduloautomatizado.model.enums.RolEnReserva;
-import com.camila.moduloautomatizado.model.entity.Usuario;
+import com.camila.moduloautomatizado.model.enums.EstadoOcupacion;
 import com.camila.moduloautomatizado.repository.ReservaEstadoRepository;
 import com.camila.moduloautomatizado.repository.ReservaRepository;
 import com.camila.moduloautomatizado.repository.ReservaUsuarioRepository;
 import com.camila.moduloautomatizado.repository.ValidacionIngresoRepository;
+import com.camila.moduloautomatizado.repository.ControlOcupacionRepository;
+import com.camila.moduloautomatizado.repository.OcupacionEstadoRepository;
 import com.camila.moduloautomatizado.dto.ReservaGrillaResponse;
 import com.camila.moduloautomatizado.dto.DetalleReservaResponse;
 import com.camila.moduloautomatizado.dto.IntegranteReservaResponse;
@@ -27,11 +31,16 @@ public class ReservaConsultaService {
     private final ReservaEstadoRepository reservaEstadoRepository;
     private final ReservaUsuarioRepository reservaUsuarioRepository;
     private final ValidacionIngresoRepository validacionIngresoRepository;
+    private final ControlOcupacionRepository controlOcupacionRepository;
+    private final OcupacionEstadoRepository ocupacionEstadoRepository;
 
     public ReservaConsultaService(
             ReservaRepository reservaRepository,
             ReservaEstadoRepository reservaEstadoRepository,
-            ReservaUsuarioRepository reservaUsuarioRepository, ValidacionIngresoRepository validacionIngresoRepository) {
+            ReservaUsuarioRepository reservaUsuarioRepository,
+            ValidacionIngresoRepository validacionIngresoRepository,
+            ControlOcupacionRepository controlOcupacionRepository,
+            OcupacionEstadoRepository ocupacionEstadoRepository) {
 
         this.reservaRepository = reservaRepository;
 
@@ -40,6 +49,10 @@ public class ReservaConsultaService {
         this.reservaUsuarioRepository = reservaUsuarioRepository;
 
         this.validacionIngresoRepository = validacionIngresoRepository;
+
+        this.controlOcupacionRepository = controlOcupacionRepository;
+
+        this.ocupacionEstadoRepository = ocupacionEstadoRepository;
     }
 
     @Transactional(readOnly = true)
@@ -113,9 +126,36 @@ public class ReservaConsultaService {
                 reserva.getFechaHoraInicio(),
                 reserva.getFechaHoraFin(),
                 reserva.getFechaCreacion(),
-                "RESERVADO",
+                obtenerEstadoVisual(
+                        reserva
+                ),
                 responsable
         );
+    }
+
+    private String obtenerEstadoVisual(
+            Reserva reserva) {
+
+        return controlOcupacionRepository
+                .findByReserva(
+                        reserva
+                )
+                .flatMap(control ->
+                        ocupacionEstadoRepository
+                                .findTopByControlOcupacionOrderByFechaHoraEstadoDesc(
+                                        control
+                                )
+                )
+                .filter(estado ->
+                        estado.getEstadoOcupacion()
+                                == EstadoOcupacion.OCUPADO
+                )
+                .map(estado ->
+                        "OCUPADO"
+                )
+                .orElse(
+                        "RESERVADO"
+                );
     }
 
     @Transactional(readOnly = true)
