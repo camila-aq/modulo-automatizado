@@ -78,103 +78,125 @@ document.addEventListener("DOMContentLoaded", () => {
             "plantillaIntegrantesReservaGrilla"
         );
 
-    inicializarGrillaReservas();
 
     let ambientesCargados = [];
     let reservasCargadas = [];
     let temporizadorIdentificacion;
 
 
-    campoDni.addEventListener("input", () => {
+    inicializarGrillaReservas();
 
-        const dni =
-            campoDni.value.trim();
 
-        if (dni.length > 0) {
-            campoCodigo.value = "";
-            campoCodigo.disabled = true;
-        } else {
-            campoCodigo.disabled = false;
+    campoDni.addEventListener(
+        "input",
+        () => {
+
+            const dni =
+                campoDni.value.trim();
+
+            if (dni.length > 0) {
+
+                campoCodigo.value = "";
+                campoCodigo.disabled = true;
+
+            } else {
+
+                campoCodigo.disabled = false;
+            }
+
+            reiniciarIdentificacion();
+
+            clearTimeout(
+                temporizadorIdentificacion
+            );
+
+            if (dni.length === 8) {
+
+                temporizadorIdentificacion =
+                    setTimeout(
+                        () => identificarUsuario(
+                            "DNI",
+                            dni
+                        ),
+                        350
+                    );
+            }
         }
+    );
 
-        reiniciarIdentificacion();
 
-        clearTimeout(
-            temporizadorIdentificacion
-        );
+    campoCodigo.addEventListener(
+        "input",
+        () => {
 
-        if (dni.length === 8) {
+            const codigo =
+                campoCodigo.value.trim();
 
-            temporizadorIdentificacion =
-                setTimeout(
-                    () => identificarUsuario(
-                        "DNI",
-                        dni
-                    ),
-                    350
-                );
+            if (codigo.length > 0) {
+
+                campoDni.value = "";
+                campoDni.disabled = true;
+
+            } else {
+
+                campoDni.disabled = false;
+            }
+
+            reiniciarIdentificacion();
+
+            clearTimeout(
+                temporizadorIdentificacion
+            );
+
+            if (codigo.length > 0) {
+
+                temporizadorIdentificacion =
+                    setTimeout(
+                        () => identificarUsuario(
+                            "CODIGO_UNIVERSITARIO",
+                            codigo
+                        ),
+                        600
+                    );
+            }
         }
-    });
+    );
 
 
-    campoCodigo.addEventListener("input", () => {
+    botonLimpiar.addEventListener(
+        "click",
+        () => {
 
-        const codigo =
-            campoCodigo.value.trim();
-
-        if (codigo.length > 0) {
             campoDni.value = "";
-            campoDni.disabled = true;
-        } else {
+            campoCodigo.value = "";
+
             campoDni.disabled = false;
+            campoCodigo.disabled = false;
+
+            reiniciarIdentificacion();
+
+            ocultarMensaje();
+
+            campoDni.focus();
         }
+    );
 
-        reiniciarIdentificacion();
 
-        clearTimeout(
-            temporizadorIdentificacion
-        );
+    botonValidarIngreso.addEventListener(
+        "click",
+        () => {
 
-        if (codigo.length > 0) {
+            if (botonValidarIngreso.disabled) {
+                return;
+            }
 
-            temporizadorIdentificacion =
-                setTimeout(
-                    () => identificarUsuario(
-                        "CODIGO_UNIVERSITARIO",
-                        codigo
-                    ),
-                    600
-                );
+            nombreUsuarioConfirmacion.textContent =
+                nombreUsuario.textContent;
+
+            modalConfirmarValidacion.hidden =
+                false;
         }
-    });
-
-
-    botonLimpiar.addEventListener("click", () => {
-
-        campoDni.value = "";
-        campoCodigo.value = "";
-
-        campoDni.disabled = false;
-        campoCodigo.disabled = false;
-
-        reiniciarIdentificacion();
-
-        ocultarMensaje();
-
-        campoDni.focus();
-    });
-
-    botonValidarIngreso.addEventListener("click", () => {
-
-        if (botonValidarIngreso.disabled) {
-            return;
-        }
-
-        nombreUsuarioConfirmacion.textContent =
-            nombreUsuario.textContent;
-
-        modalConfirmarValidacion.hidden = false;
-    });
+    );
 
 
     botonCerrarModalValidacion.addEventListener(
@@ -188,6 +210,7 @@ document.addEventListener("DOMContentLoaded", () => {
         cerrarModalValidacion
     );
 
+
     botonConfirmarValidacion.addEventListener(
         "click",
         confirmarValidacionIngreso
@@ -198,11 +221,16 @@ document.addEventListener("DOMContentLoaded", () => {
         "click",
         (event) => {
 
-            if (event.target === modalConfirmarValidacion) {
+            if (
+                event.target
+                === modalConfirmarValidacion
+            ) {
+
                 cerrarModalValidacion();
             }
         }
     );
+
 
     botonBuscarReserva.addEventListener(
         "click",
@@ -229,16 +257,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (
                 event.key === "Escape"
-                && !modalConfirmarValidacion.hidden
+                &&
+                !modalConfirmarValidacion.hidden
             ) {
+
                 cerrarModalValidacion();
             }
         }
     );
 
+
     botonBuscarGrilla.addEventListener(
         "click",
         async () => {
+
             await cargarGrillaCatalogo();
         }
     );
@@ -246,8 +278,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function cerrarModalValidacion() {
 
-        modalConfirmarValidacion.hidden = true;
+        modalConfirmarValidacion.hidden =
+            true;
     }
+
 
     async function confirmarValidacionIngreso() {
 
@@ -255,6 +289,7 @@ document.addEventListener("DOMContentLoaded", () => {
             obtenerIdentificadorActual();
 
         if (!identificador) {
+
             cerrarModalValidacion();
             return;
         }
@@ -264,9 +299,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         try {
 
-            /*
-             * 1. Localizamos la reserva vigente del usuario identificado.
-             */
             const parametros =
                 new URLSearchParams({
                     tipo: identificador.tipo,
@@ -291,9 +323,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
 
-            /*
-             * 2. Registramos únicamente la validación del usuario identificado.
-             */
             const respuestaValidacion =
                 await fetch(
                     "/api/validaciones-ingreso/manual/confirmar",
@@ -327,10 +356,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
 
-            /*
-             * 3. Consultamos nuevamente el detalle.
-             * Ahora el integrante debe venir con validado = true.
-             */
             const respuestaActualizada =
                 await fetch(
                     "/api/validaciones-ingreso/manual/detalle?"
@@ -349,10 +374,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
 
-            /*
-             * 4. Cerramos el modal y usamos exactamente el mismo flujo visual
-             * de Buscar reserva.
-             */
             cerrarModalValidacion();
 
             await mostrarReservaEncontrada(
@@ -417,8 +438,11 @@ document.addEventListener("DOMContentLoaded", () => {
             nombreUsuario.textContent =
                 nombreCompleto;
 
-            botonBuscarReserva.disabled = false;
-            botonValidarIngreso.disabled = false;
+            botonBuscarReserva.disabled =
+                false;
+
+            botonValidarIngreso.disabled =
+                false;
 
             ocultarMensaje();
 
@@ -452,23 +476,29 @@ document.addEventListener("DOMContentLoaded", () => {
         tipo
     ) {
 
-        mensaje.textContent = texto;
+        mensaje.textContent =
+            texto;
 
         mensaje.className =
             `mensaje mensaje-${tipo}`;
 
-        mensaje.hidden = false;
+        mensaje.hidden =
+            false;
     }
 
 
     function ocultarMensaje() {
 
-        mensaje.textContent = "";
+        mensaje.textContent =
+            "";
 
-        mensaje.className = "mensaje";
+        mensaje.className =
+            "mensaje";
 
-        mensaje.hidden = true;
+        mensaje.hidden =
+            true;
     }
+
 
     function obtenerIdentificadorActual() {
 
@@ -496,6 +526,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         return null;
     }
+
 
     async function cargarDetalleReserva(
         tipo,
@@ -542,31 +573,23 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+
     async function mostrarReservaEncontrada(
         datos
     ) {
 
-        /*
-         * Lleva los criterios de búsqueda
-         * al edificio y fecha de la reserva.
-         */
         ubicacionReserva.value =
             String(
                 datos.idUbicacion
             );
 
         fechaReserva.value =
-            datos.fechaHoraInicio
-                .substring(
-                    0,
-                    10
-                );
+            datos.fechaHoraInicio.substring(
+                0,
+                10
+            );
 
 
-        /*
-         * Recarga la grilla con el contexto
-         * correcto de la reserva.
-         */
         await cargarGrillaCatalogo();
 
 
@@ -585,20 +608,12 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
 
-        /*
-         * Abre el mismo detalle de ambiente
-         * utilizado al hacer clic en la grilla.
-         */
         mostrarDetalleAmbienteGeneral(
             ambiente,
             ambientesCargados
         );
 
 
-        /*
-         * Localiza la fila correspondiente
-         * a la reserva encontrada.
-         */
         const filaReserva =
             cuerpoDetalleAmbienteGeneral
                 .querySelector(
@@ -613,9 +628,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
 
-        /*
-         * Despliega sus integrantes.
-         */
         await mostrarIntegrantesReservaGrilla(
             datos.idReserva,
             filaReserva,
@@ -639,32 +651,50 @@ document.addEventListener("DOMContentLoaded", () => {
         );
     }
 
+
     function formatearFechaHora(fechaHora) {
 
         const fecha =
             new Date(fechaHora);
 
         const dia =
-            String(fecha.getDate())
-                .padStart(2, "0");
+            String(
+                fecha.getDate()
+            ).padStart(
+                2,
+                "0"
+            );
 
         const mes =
-            String(fecha.getMonth() + 1)
-                .padStart(2, "0");
+            String(
+                fecha.getMonth() + 1
+            ).padStart(
+                2,
+                "0"
+            );
 
         const anio =
             fecha.getFullYear();
 
         const hora =
-            String(fecha.getHours())
-                .padStart(2, "0");
+            String(
+                fecha.getHours()
+            ).padStart(
+                2,
+                "0"
+            );
 
         const minutos =
-            String(fecha.getMinutes())
-                .padStart(2, "0");
+            String(
+                fecha.getMinutes()
+            ).padStart(
+                2,
+                "0"
+            );
 
         return `${dia}/${mes}/${anio} ${hora}:${minutos}`;
     }
+
 
     async function inicializarGrillaReservas() {
 
@@ -673,9 +703,11 @@ document.addEventListener("DOMContentLoaded", () => {
         await cargarUbicaciones();
 
         if (ubicacionReserva.value) {
+
             await cargarGrillaCatalogo();
         }
     }
+
 
     function establecerFechaActual() {
 
@@ -686,16 +718,25 @@ document.addEventListener("DOMContentLoaded", () => {
             hoy.getFullYear();
 
         const mes =
-            String(hoy.getMonth() + 1)
-                .padStart(2, "0");
+            String(
+                hoy.getMonth() + 1
+            ).padStart(
+                2,
+                "0"
+            );
 
         const dia =
-            String(hoy.getDate())
-                .padStart(2, "0");
+            String(
+                hoy.getDate()
+            ).padStart(
+                2,
+                "0"
+            );
 
         fechaReserva.value =
             `${anio}-${mes}-${dia}`;
     }
+
 
     async function cargarUbicaciones() {
 
@@ -710,6 +751,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 await respuesta.json();
 
             if (!respuesta.ok) {
+
                 throw new Error(
                     "No fue posible cargar las ubicaciones."
                 );
@@ -722,7 +764,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 ubicacion => {
 
                     const opcion =
-                        document.createElement("option");
+                        document.createElement(
+                            "option"
+                        );
 
                     opcion.value =
                         ubicacion.idUbicacion;
@@ -744,6 +788,7 @@ document.addEventListener("DOMContentLoaded", () => {
             );
         }
     }
+
 
     async function cargarGrillaCatalogo() {
 
@@ -819,6 +864,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+
     function construirGrilla(
         ambientes,
         reservas
@@ -829,6 +875,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 Todos
             </th>
         `;
+
         encabezadoGrillaReservas
             .querySelector(
                 ".encabezado-todos"
@@ -838,11 +885,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 mostrarGrillaGeneral
             );
 
+
         ambientes.forEach(
             ambiente => {
 
                 const th =
-                    document.createElement("th");
+                    document.createElement(
+                        "th"
+                    );
 
                 th.classList.add(
                     "encabezado-ambiente"
@@ -863,31 +913,31 @@ document.addEventListener("DOMContentLoaded", () => {
                 );
 
                 th.innerHTML = `
-                <span>
-                    ${ambiente.abreviatura}
-                </span>
+                    <span>
+                        ${ambiente.abreviatura}
+                    </span>
 
-                <div class="tooltip-ambiente">
+                    <div class="tooltip-ambiente">
 
-                    <strong>
-                        Ambiente: ${ambiente.nombre}
-                        - ${ambiente.piso}
-                    </strong>
+                        <strong>
+                            Ambiente: ${ambiente.nombre}
+                            - ${ambiente.piso}
+                        </strong>
 
-                    <br><br>
+                        <br><br>
 
-                    <strong>Mín.</strong>
-                    ${ambiente.cantidadMinima}
-                    personas
+                        <strong>Mín.</strong>
+                        ${ambiente.cantidadMinima}
+                        personas
 
-                    <br><br>
+                        <br><br>
 
-                    <strong>Máx.</strong>
-                    ${ambiente.cantidadMaxima}
-                    personas
+                        <strong>Máx.</strong>
+                        ${ambiente.cantidadMaxima}
+                        personas
 
-                </div>
-            `;
+                    </div>
+                `;
 
                 encabezadoGrillaReservas.appendChild(
                     th
@@ -895,16 +945,26 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         );
 
+
         cuerpoGrillaReservas.innerHTML =
             "";
 
-        for (let hora = 8; hora <= 20; hora++) {
+
+        for (
+            let hora = 8;
+            hora <= 20;
+            hora++
+        ) {
 
             const fila =
-                document.createElement("tr");
+                document.createElement(
+                    "tr"
+                );
 
             const celdaHora =
-                document.createElement("td");
+                document.createElement(
+                    "td"
+                );
 
             celdaHora.textContent =
                 `${String(hora).padStart(2, "0")}:00`;
@@ -913,11 +973,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 celdaHora
             );
 
+
             ambientes.forEach(
                 ambiente => {
 
                     const celda =
-                        document.createElement("td");
+                        document.createElement(
+                            "td"
+                        );
 
                     celda.classList.add(
                         "estado-libre"
@@ -935,18 +998,24 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             );
 
+
             cuerpoGrillaReservas.appendChild(
                 fila
             );
         }
+
+
         pintarReservasEnGrilla(
             reservas
         );
 
-        vistaDetalleAmbienteGeneral.hidden = true;
+        vistaDetalleAmbienteGeneral.hidden =
+            true;
 
-        cuerpoGrillaReservas.hidden = false;
+        cuerpoGrillaReservas.hidden =
+            false;
     }
+
 
     function pintarReservasEnGrilla(
         reservas
@@ -978,13 +1047,26 @@ document.addEventListener("DOMContentLoaded", () => {
                             return;
                         }
 
+
+                        const ocupada =
+                            reserva.periodosOcupados
+                                .some(
+                                    periodo =>
+                                        periodoOcupaHora(
+                                            periodo,
+                                            hora
+                                        )
+                                );
+
+
                         celda.classList.remove(
                             "estado-libre",
                             "estado-reservado",
                             "estado-ocupado"
                         );
 
-                        if (reserva.estado === "OCUPADO") {
+
+                        if (ocupada) {
 
                             celda.classList.add(
                                 "estado-ocupado"
@@ -996,6 +1078,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                 "estado-reservado"
                             );
                         }
+
 
                         celda.dataset.idReserva =
                             reserva.idReserva;
@@ -1011,6 +1094,7 @@ document.addEventListener("DOMContentLoaded", () => {
         );
     }
 
+
     function reservaOcupaHora(
         reserva,
         hora
@@ -1020,11 +1104,12 @@ document.addEventListener("DOMContentLoaded", () => {
             fechaReserva.value;
 
         const horaTexto =
-            String(hora)
-                .padStart(
-                    2,
-                    "0"
-                );
+            String(
+                hora
+            ).padStart(
+                2,
+                "0"
+            );
 
         const inicioCelda =
             new Date(
@@ -1047,9 +1132,58 @@ document.addEventListener("DOMContentLoaded", () => {
                 reserva.fechaHoraFin
             );
 
-        return inicioReserva < finCelda
-            && finReserva > inicioCelda;
+        return (
+            inicioReserva < finCelda
+            &&
+            finReserva > inicioCelda
+        );
     }
+
+    function periodoOcupaHora(
+        periodo,
+        hora
+    ) {
+
+        const fecha =
+            fechaReserva.value;
+
+        const horaTexto =
+            String(
+                hora
+            ).padStart(
+                2,
+                "0"
+            );
+
+        const inicioCelda =
+            new Date(
+                `${fecha}T${horaTexto}:00:00`
+            );
+
+        const finCelda =
+            new Date(
+                inicioCelda.getTime()
+                + 60 * 60 * 1000
+            );
+
+        const inicioPeriodo =
+            new Date(
+                periodo.fechaHoraInicio
+            );
+
+        const finPeriodo =
+            new Date(
+                periodo.fechaHoraFin
+            );
+
+
+        return (
+            inicioPeriodo < finCelda
+            &&
+            finPeriodo > inicioCelda
+        );
+    }
+
 
     function mostrarDetalleAmbienteGeneral(
         ambienteSeleccionado,
@@ -1066,20 +1200,22 @@ document.addEventListener("DOMContentLoaded", () => {
         celdaDetalleAmbienteGeneral.colSpan =
             ambientes.length + 1;
 
+
         tituloAmbienteGeneral.textContent =
             `${ambienteSeleccionado.codigo} - `
             + `${ambienteSeleccionado.nombre} - `
             + `${ambienteSeleccionado.piso}`;
 
+
         marcarAmbienteSeleccionado(
             ambienteSeleccionado.idAmbiente
         );
+
 
         construirHorasAmbienteGeneral(
             ambienteSeleccionado
         );
     }
-
 
 
     function construirHorasAmbienteGeneral(
@@ -1088,6 +1224,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         cuerpoDetalleAmbienteGeneral.innerHTML =
             "";
+
 
         for (
             let hora = 8;
@@ -1101,12 +1238,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 );
 
             const horaInicio =
-                `${String(hora)
-                    .padStart(2, "0")}:00`;
+                `${String(hora).padStart(2, "0")}:00`;
 
             const horaFin =
-                `${String(hora + 1)
-                    .padStart(2, "0")}:00`;
+                `${String(hora + 1).padStart(2, "0")}:00`;
 
 
             const reserva =
@@ -1134,82 +1269,97 @@ document.addEventListener("DOMContentLoaded", () => {
                 fila.dataset.idReserva =
                     reserva.idReserva;
 
-                const reservaOcupada =
-                    reserva.estado === "OCUPADO";
+                fila.dataset.hora =
+                    hora;
+
+
+                const periodoOcupado =
+                    reserva.periodosOcupados
+                        .some(
+                            periodo =>
+                                periodoOcupaHora(
+                                    periodo,
+                                    hora
+                                )
+                        );
+
 
                 const claseEstado =
-                    reservaOcupada
+                    periodoOcupado
                         ? "estado-ocupado-detalle"
                         : "estado-reservado-detalle";
 
                 const textoEstado =
-                    reservaOcupada
+                    periodoOcupado
                         ? "Ocupado"
                         : "Reservado";
 
+
                 fila.innerHTML = `
-                    <td class="celda-hora-detalle">
-                        ${horaInicio} - ${horaFin}
-                    </td>
-    
-                    <td class="estado-detalle ${claseEstado}">
-                        ${textoEstado}
-                    </td>
-    
-                    <td>
-                        ${formatearFechaHora(
-                        reserva.fechaHoraRegistro
-                    )}
-                    </td>
-    
-                    <td>
-                        <button
-                            class="accion-tabla boton-ocupar-reserva"
-                            type="button"
-                            title="Ocupar reserva"
-                            ${reservaOcupada ? "disabled" : ""}>
-                            ✓
-                        </button>
-                    </td>
-    
-                    <td>
-                        <button
-                            class="accion-tabla"
-                            type="button"
-                            title="Cancelar reserva">
-                            ✕
-                        </button>
-                    </td>
-    
-                    <td>
-                        <button
-                            class="accion-tabla"
-                            type="button"
-                            title="Liberar reserva">
-                            🗑
-                        </button>
-                    </td>
-    
-                    <td>—</td>
-    
-                    <td>—</td>
-    
-                    <td>—</td>
-    
-                    <td>
-                        ${reserva.responsable}
-                    </td>
-                `;
+                <td class="celda-hora-detalle">
+                    ${horaInicio} - ${horaFin}
+                </td>
+
+                <td class="estado-detalle ${claseEstado}">
+                    ${textoEstado}
+                </td>
+
+                <td>
+                    ${formatearFechaHora(
+                    reserva.fechaHoraRegistro
+                )}
+                </td>
+
+                <td>
+                    <button
+                        class="accion-tabla boton-ocupar-reserva"
+                        type="button"
+                        title="Ocupar horario"
+                        ${periodoOcupado ? "disabled" : ""}>
+                        ✓
+                    </button>
+                </td>
+
+                <td>
+                    <button
+                        class="accion-tabla"
+                        type="button"
+                        title="Cancelar reserva">
+                        ✕
+                    </button>
+                </td>
+
+                <td>
+                    <button
+                        class="accion-tabla"
+                        type="button"
+                        title="Liberar reserva">
+                        🗑
+                    </button>
+                </td>
+
+                <td>—</td>
+
+                <td>—</td>
+
+                <td>—</td>
+
+                <td>
+                    ${reserva.responsable}
+                </td>
+            `;
+
 
                 const botonOcupar =
                     fila.querySelector(
                         ".boton-ocupar-reserva"
                     );
 
+
                 if (
                     botonOcupar
                     &&
-                    !reservaOcupada
+                    !periodoOcupado
                 ) {
 
                     botonOcupar.addEventListener(
@@ -1220,7 +1370,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
                             await ocuparReservaManual(
                                 reserva.idReserva,
-                                ambienteSeleccionado
+                                ambienteSeleccionado,
+                                hora
                             );
                         }
                     );
@@ -1249,30 +1400,29 @@ document.addEventListener("DOMContentLoaded", () => {
             } else {
 
                 fila.innerHTML = `
-                    <td class="celda-hora-detalle">
-                        ${horaInicio} - ${horaFin}
-                    </td>
-    
-                    <td class="estado-detalle estado-libre-detalle">
-                        Libre
-                    </td>
-    
-                    <td>—</td>
-                    <td>—</td>
-                    <td>—</td>
-                    <td>—</td>
-                    <td>—</td>
-                    <td>—</td>
-                    <td>—</td>
-                    <td>—</td>
-                `;
+                <td class="celda-hora-detalle">
+                    ${horaInicio} - ${horaFin}
+                </td>
+
+                <td class="estado-detalle estado-libre-detalle">
+                    Libre
+                </td>
+
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+            `;
             }
 
 
-            cuerpoDetalleAmbienteGeneral
-                .appendChild(
-                    fila
-                );
+            cuerpoDetalleAmbienteGeneral.appendChild(
+                fila
+            );
         }
     }
 
@@ -1287,6 +1437,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         limpiarAmbienteSeleccionado();
     }
+
 
     function marcarAmbienteSeleccionado(
         idAmbiente
@@ -1311,6 +1462,7 @@ document.addEventListener("DOMContentLoaded", () => {
         );
     }
 
+
     function limpiarAmbienteSeleccionado() {
 
         encabezadoGrillaReservas
@@ -1327,16 +1479,13 @@ document.addEventListener("DOMContentLoaded", () => {
             );
     }
 
+
     async function mostrarIntegrantesReservaGrilla(
         idReserva,
         filaReserva,
         idReservaUsuarioBuscado = null
     ) {
 
-        /*
-     * Si la reserva ya está desplegada,
-     * un segundo clic contrae sus integrantes.
-     */
         const detalleActual =
             filaReserva.nextElementSibling;
 
@@ -1363,6 +1512,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+
         try {
 
             const respuesta =
@@ -1382,16 +1532,15 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
 
-            /*
-             * Solo puede haber un detalle
-             * de integrantes abierto.
-             */
             cuerpoDetalleAmbienteGeneral
                 .querySelectorAll(
                     ".fila-informacion-reserva-grilla"
                 )
                 .forEach(
-                    fila => fila.remove()
+                    fila => {
+
+                        fila.remove();
+                    }
                 );
 
 
@@ -1437,10 +1586,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     "#integrantesReservaBody"
                 );
 
-            /*
-             * Evitamos duplicar el ID que ya
-             * utiliza el detalle de búsqueda manual.
-             */
+
             cuerpoIntegrantes.id =
                 "integrantesReservaGrillaBody";
 
@@ -1452,6 +1598,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         document.createElement(
                             "tr"
                         );
+
 
                     if (
                         idReservaUsuarioBuscado !== null
@@ -1486,40 +1633,39 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
                     fila.innerHTML = `
-                    <td>
-                        ${indice + 1}
-                    </td>
+                        <td>
+                            ${indice + 1}
+                        </td>
 
-                    <td>
-                        ${integrante.codigoUniversitario}
-                    </td>
+                        <td>
+                            ${integrante.codigoUniversitario}
+                        </td>
 
-                    <td>
-                        ${integrante.dni}
-                    </td>
+                        <td>
+                            ${integrante.dni}
+                        </td>
 
-                    <td>
-                        ${integrante.nombres}
-                        ${integrante.apellidos}
-                    </td>
+                        <td>
+                            ${integrante.nombres}
+                            ${integrante.apellidos}
+                        </td>
 
-                    <td>
-                        ${rolTexto}
-                    </td>
+                        <td>
+                            ${rolTexto}
+                        </td>
 
-                    <td>
-                        <span
-                            class="estado-ingreso ${estadoClase}">
-                            ${estadoTexto}
-                        </span>
-                    </td>
-                `;
+                        <td>
+                            <span
+                                class="estado-ingreso ${estadoClase}">
+                                ${estadoTexto}
+                            </span>
+                        </td>
+                    `;
 
 
-                    cuerpoIntegrantes
-                        .appendChild(
-                            fila
-                        );
+                    cuerpoIntegrantes.appendChild(
+                        fila
+                    );
                 }
             );
 
@@ -1539,19 +1685,39 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+
     async function ocuparReservaManual(
         idReserva,
-        ambienteSeleccionado) {
+        ambienteSeleccionado,
+        hora
+    ) {
+
+        const horaInicio =
+            `${String(hora).padStart(2, "0")}:00`;
+
+        const horaFin =
+            `${String(hora + 1).padStart(2, "0")}:00`;
+
 
         const confirmado =
             window.confirm(
-                "¿Está seguro de ocupar esta reserva? "
-                + "Todos sus integrantes serán registrados como validados."
+                `¿Está seguro de ocupar el horario `
+                + `${horaInicio} - ${horaFin}? `
+                + `Todos los integrantes de la reserva `
+                + `serán registrados como validados.`
             );
+
 
         if (!confirmado) {
             return;
         }
+
+
+        const fechaHoraInicioPeriodo =
+            `${fechaReserva.value}T`
+            + `${String(hora).padStart(2, "0")}`
+            + ":00:00";
+
 
         try {
 
@@ -1559,27 +1725,35 @@ document.addEventListener("DOMContentLoaded", () => {
                 await fetch(
                     `/api/reservas/${idReserva}/ocupar`,
                     {
-                        method: "POST"
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body: JSON.stringify({
+                            fechaHoraInicioPeriodo:
+                            fechaHoraInicioPeriodo
+                        })
                     }
                 );
 
+
             const datos =
                 await respuesta.json();
+
 
             if (!respuesta.ok) {
 
                 throw new Error(
                     datos.mensaje
                     || datos.message
-                    || "No fue posible ocupar la reserva."
+                    || "No fue posible ocupar el horario."
                 );
             }
 
 
-            /*
-             * Recargamos datos para obtener
-             * el nuevo estado OCUPADO.
-             */
             await cargarGrillaCatalogo();
 
 
@@ -1589,6 +1763,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         ambiente.idAmbiente
                         === ambienteSeleccionado.idAmbiente
                 );
+
 
             if (ambienteActual) {
 
@@ -1602,7 +1777,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     cuerpoDetalleAmbienteGeneral
                         .querySelector(
                             `tr[data-id-reserva="${idReserva}"]`
+                            + `[data-hora="${hora}"]`
                         );
+
 
                 if (filaActual) {
 
@@ -1615,8 +1792,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
             mostrarMensaje(
-                "Reserva ocupada correctamente. "
-                + "Todos los integrantes fueron registrados como validados.",
+                `Horario ${horaInicio} - ${horaFin} `
+                + `ocupado correctamente. `
+                + `Todos los integrantes fueron `
+                + `registrados como validados.`,
                 "exito"
             );
 

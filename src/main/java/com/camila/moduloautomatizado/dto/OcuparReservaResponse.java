@@ -6,6 +6,8 @@ public record OcuparReservaResponse(
         Integer idReserva,
         String codigoReserva,
         String estado,
+        LocalDateTime fechaHoraInicioPeriodo,
+        LocalDateTime fechaHoraFinPeriodo,
         Integer cantidadIntegrantes,
         Integer cantidadValidacionesRegistradas,
         LocalDateTime fechaHoraOcupacion

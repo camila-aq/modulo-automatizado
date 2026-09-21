@@ -14,8 +14,6 @@ import com.camila.moduloautomatizado.model.enums.EstadoReserva;
 import com.camila.moduloautomatizado.model.enums.MedioValidacion;
 import com.camila.moduloautomatizado.model.enums.TipoIdentificador;
 
-import com.camila.moduloautomatizado.model.rule.ReglasControlOcupacion;
-
 import com.camila.moduloautomatizado.repository.ControlOcupacionRepository;
 import com.camila.moduloautomatizado.repository.OcupacionEstadoRepository;
 import com.camila.moduloautomatizado.repository.PuntoValidacionRepository;
@@ -28,7 +26,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class OcupacionManualService {
@@ -82,7 +82,16 @@ public class OcupacionManualService {
 
     @Transactional
     public OcuparReservaResponse ocuparReserva(
-            Integer idReserva) {
+            Integer idReserva,
+            LocalDateTime fechaHoraInicioPeriodo) {
+
+        if (fechaHoraInicioPeriodo == null) {
+
+            throw new IllegalArgumentException(
+                    "Debe indicar la hora que se desea ocupar."
+            );
+        }
+
 
         Reserva reserva =
                 reservaRepository
@@ -96,63 +105,21 @@ public class OcupacionManualService {
                         );
 
 
-        /*
-         * La reserva debe continuar vigente.
-         * Esto evita ocupar reservas canceladas
-         * o finalizadas.
-         */
-        boolean reservaVigente =
-                reservaEstadoRepository
-                        .findTopByReservaOrderByFechaHoraEstadoDesc(
-                                reserva
-                        )
-                        .map(estado ->
-                                estado.getEstadoReserva()
-                                        == EstadoReserva.VIGENTE
-                        )
-                        .orElse(false);
-
-        if (!reservaVigente) {
-
-            throw new IllegalArgumentException(
-                    "La reserva no se encuentra vigente."
-            );
-        }
+        validarReservaVigente(
+                reserva
+        );
 
 
-        LocalDateTime momento =
-                LocalDateTime.now();
+        LocalDateTime fechaHoraFinPeriodo =
+                fechaHoraInicioPeriodo
+                        .plusHours(1);
 
 
-        /*
-         * La ocupación manual puede realizarse
-         * desde los minutos de anticipación
-         * permitidos hasta antes de la hora fin.
-         *
-         * No se aplica la tolerancia automática.
-         */
-        LocalDateTime inicioPermitido =
-                reserva.getFechaHoraInicio()
-                        .minusMinutes(
-                                ReglasControlOcupacion
-                                        .MINUTOS_ANTICIPACION
-                        );
-
-        boolean dentroDelHorario =
-                !momento.isBefore(
-                        inicioPermitido
-                )
-                        &&
-                        momento.isBefore(
-                                reserva.getFechaHoraFin()
-                        );
-
-        if (!dentroDelHorario) {
-
-            throw new IllegalArgumentException(
-                    "La reserva no se encuentra dentro del horario permitido para ocupar."
-            );
-        }
+        validarPeriodoDentroDeReserva(
+                reserva,
+                fechaHoraInicioPeriodo,
+                fechaHoraFinPeriodo
+        );
 
 
         List<ReservaUsuario> integrantes =
@@ -181,6 +148,10 @@ public class OcupacionManualService {
                         );
 
 
+        LocalDateTime momento =
+                LocalDateTime.now();
+
+
         ControlOcupacion controlOcupacion =
                 obtenerOCrearControlOcupacion(
                         reserva,
@@ -188,45 +159,226 @@ public class OcupacionManualService {
                 );
 
 
-        boolean yaOcupada =
-                ocupacionEstadoRepository
-                        .findTopByControlOcupacionOrderByFechaHoraEstadoDesc(
-                                controlOcupacion
-                        )
-                        .map(estado ->
-                                estado.getEstadoOcupacion()
-                                        == EstadoOcupacion.OCUPADO
-                        )
-                        .orElse(false);
-
-        if (yaOcupada) {
+        if (
+                periodoYaOcupado(
+                        controlOcupacion,
+                        fechaHoraInicioPeriodo,
+                        fechaHoraFinPeriodo
+                )
+        ) {
 
             throw new IllegalArgumentException(
-                    "La reserva ya se encuentra ocupada."
+                    "La hora seleccionada ya se encuentra ocupada."
             );
         }
 
 
         int validacionesRegistradas =
-                0;
+                registrarValidacionesPendientes(
+                        integrantes,
+                        puntoValidacion,
+                        momento
+                );
 
+
+        OcupacionEstado estadoOcupado =
+                new OcupacionEstado();
+
+        estadoOcupado.setControlOcupacion(
+                controlOcupacion
+        );
+
+        estadoOcupado.setEstadoOcupacion(
+                EstadoOcupacion.OCUPADO
+        );
+
+        estadoOcupado.setFechaHoraInicioPeriodo(
+                fechaHoraInicioPeriodo
+        );
+
+        estadoOcupado.setFechaHoraFinPeriodo(
+                fechaHoraFinPeriodo
+        );
+
+        estadoOcupado.setMotivo(
+                "Ocupación manual registrada por el administrador"
+        );
+
+        estadoOcupado.setFechaHoraEstado(
+                momento
+        );
+
+        estadoOcupado.setFechaCreacion(
+                momento
+        );
+
+        estadoOcupado.setUsuarioCreacion(
+                null
+        );
+
+
+        ocupacionEstadoRepository.save(
+                estadoOcupado
+        );
+
+
+        return new OcuparReservaResponse(
+                reserva.getIdReserva(),
+                reserva.getCodigoReserva(),
+                EstadoOcupacion.OCUPADO.name(),
+                fechaHoraInicioPeriodo,
+                fechaHoraFinPeriodo,
+                integrantes.size(),
+                validacionesRegistradas,
+                momento
+        );
+    }
+
+
+    private void validarReservaVigente(
+            Reserva reserva) {
+
+        boolean reservaVigente =
+                reservaEstadoRepository
+                        .findTopByReservaOrderByFechaHoraEstadoDesc(
+                                reserva
+                        )
+                        .map(estado ->
+                                estado.getEstadoReserva()
+                                        == EstadoReserva.VIGENTE
+                        )
+                        .orElse(false);
+
+
+        if (!reservaVigente) {
+
+            throw new IllegalArgumentException(
+                    "La reserva no se encuentra vigente."
+            );
+        }
+    }
+
+
+    private void validarPeriodoDentroDeReserva(
+            Reserva reserva,
+            LocalDateTime inicioPeriodo,
+            LocalDateTime finPeriodo) {
 
         /*
-         * Ocupar manualmente la reserva implica
-         * validar a todos sus integrantes.
-         *
-         * Si alguno ya había validado su ingreso
-         * individualmente, se conserva esa
-         * validación y no se duplica.
+         * La fila debe representar una hora
+         * exacta de la grilla.
          */
+        boolean horaExacta =
+                inicioPeriodo.getMinute() == 0
+                        &&
+                        inicioPeriodo.getSecond() == 0
+                        &&
+                        inicioPeriodo.getNano() == 0;
+
+        if (!horaExacta) {
+
+            throw new IllegalArgumentException(
+                    "La hora seleccionada no corresponde a una franja válida."
+            );
+        }
+
+        boolean inicioValido =
+                !inicioPeriodo.isBefore(
+                        reserva.getFechaHoraInicio()
+                );
+
+        boolean finValido =
+                !finPeriodo.isAfter(
+                        reserva.getFechaHoraFin()
+                );
+
+
+        if (
+                !inicioValido
+                        ||
+                        !finValido
+        ) {
+
+            throw new IllegalArgumentException(
+                    "La hora seleccionada no pertenece al bloque de la reserva."
+            );
+        }
+    }
+
+
+    private boolean periodoYaOcupado(
+            ControlOcupacion controlOcupacion,
+            LocalDateTime inicioPeriodo,
+            LocalDateTime finPeriodo) {
+
+        List<OcupacionEstado> historial =
+                ocupacionEstadoRepository
+                        .findByControlOcupacionOrderByFechaHoraEstadoAsc(
+                                controlOcupacion
+                        );
+
+        Map<String, OcupacionEstado> ultimoEstadoPorPeriodo =
+                new HashMap<>();
+
+
+        for (OcupacionEstado estado : historial) {
+
+            String clave =
+                    estado.getFechaHoraInicioPeriodo()
+                            + "|"
+                            + estado.getFechaHoraFinPeriodo();
+
+            ultimoEstadoPorPeriodo.put(
+                    clave,
+                    estado
+            );
+        }
+
+        return ultimoEstadoPorPeriodo
+                .values()
+                .stream()
+                .filter(estado ->
+                        estado.getEstadoOcupacion()
+                                == EstadoOcupacion.OCUPADO
+                )
+                .anyMatch(estado -> {
+
+                    LocalDateTime inicioExistente =
+                            estado.getFechaHoraInicioPeriodo();
+
+                    LocalDateTime finExistente =
+                            estado.getFechaHoraFinPeriodo();
+
+                    return (
+                            inicioExistente.isBefore(
+                                    finPeriodo
+                            )
+                                    &&
+                                    finExistente.isAfter(
+                                            inicioPeriodo
+                                    )
+                    );
+                });
+    }
+
+
+    private int registrarValidacionesPendientes(
+            List<ReservaUsuario> integrantes,
+            PuntoValidacion puntoValidacion,
+            LocalDateTime momento) {
+
+        int validacionesRegistradas =
+                0;
+
         for (ReservaUsuario integrante : integrantes) {
 
-            if (
+            boolean yaValidado =
                     validacionIngresoRepository
                             .existsByReservaUsuario(
                                     integrante
-                            )
-            ) {
+                            );
+
+            if (yaValidado) {
                 continue;
             }
 
@@ -271,47 +423,7 @@ public class OcupacionManualService {
         }
 
 
-        OcupacionEstado estadoOcupado =
-                new OcupacionEstado();
-
-        estadoOcupado.setControlOcupacion(
-                controlOcupacion
-        );
-
-        estadoOcupado.setEstadoOcupacion(
-                EstadoOcupacion.OCUPADO
-        );
-
-        estadoOcupado.setMotivo(
-                "Ocupación manual registrada por el administrador"
-        );
-
-        estadoOcupado.setFechaHoraEstado(
-                momento
-        );
-
-        estadoOcupado.setFechaCreacion(
-                momento
-        );
-
-        estadoOcupado.setUsuarioCreacion(
-                null
-        );
-
-
-        ocupacionEstadoRepository.save(
-                estadoOcupado
-        );
-
-
-        return new OcuparReservaResponse(
-                reserva.getIdReserva(),
-                reserva.getCodigoReserva(),
-                EstadoOcupacion.OCUPADO.name(),
-                integrantes.size(),
-                validacionesRegistradas,
-                momento
-        );
+        return validacionesRegistradas;
     }
 
 
@@ -333,10 +445,9 @@ public class OcupacionManualService {
                     );
 
                     /*
-                     * Estos valores representan
-                     * la configuración temporal del
-                     * control, pero NO se evalúan
-                     * para decidir la ocupación manual.
+                     * CONTROL_OCUPACION sigue
+                     * perteneciendo a la reserva
+                     * completa.
                      */
                     control.setFechaHoraInicioControl(
                             reserva.getFechaHoraInicio()
@@ -356,6 +467,7 @@ public class OcupacionManualService {
                     control.setUsuarioCreacion(
                             null
                     );
+
 
                     return controlOcupacionRepository.save(
                             control

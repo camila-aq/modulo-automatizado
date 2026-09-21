@@ -1,6 +1,7 @@
 package com.camila.moduloautomatizado.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record ReservaGrillaResponse(
         Integer idReserva,
@@ -9,7 +10,7 @@ public record ReservaGrillaResponse(
         LocalDateTime fechaHoraInicio,
         LocalDateTime fechaHoraFin,
         LocalDateTime fechaHoraRegistro,
-        String estado,
-        String responsable
+        String responsable,
+        List<PeriodoOcupacionResponse> periodosOcupados
 ) {
 }
