@@ -1,35 +1,47 @@
 package com.camila.moduloautomatizado.service;
 
-import com.camila.moduloautomatizado.model.entity.Usuario;
-import com.camila.moduloautomatizado.repository.ValidacionIngresoRepository;
+import com.camila.moduloautomatizado.model.entity.Ambiente;
 import com.camila.moduloautomatizado.model.entity.Reserva;
-import com.camila.moduloautomatizado.repository.ReservaRepository;
-import com.camila.moduloautomatizado.model.entity.ReservaUsuario;
 import com.camila.moduloautomatizado.model.entity.ReservaEstado;
-import com.camila.moduloautomatizado.model.enums.EstadoReserva;
-import com.camila.moduloautomatizado.repository.ReservaEstadoRepository;
+import com.camila.moduloautomatizado.model.entity.ReservaUsuario;
+import com.camila.moduloautomatizado.model.entity.Usuario;
 import com.camila.moduloautomatizado.model.entity.ValidacionIngreso;
+
+import com.camila.moduloautomatizado.model.enums.EstadoReserva;
 import com.camila.moduloautomatizado.model.enums.MedioValidacion;
+import com.camila.moduloautomatizado.model.enums.RolEnReserva;
 import com.camila.moduloautomatizado.model.enums.TipoIdentificador;
+
+import com.camila.moduloautomatizado.model.rule.ReglasControlOcupacion;
+
+import com.camila.moduloautomatizado.repository.AmbienteRepository;
+import com.camila.moduloautomatizado.repository.ReservaEstadoRepository;
+import com.camila.moduloautomatizado.repository.ReservaRepository;
+import com.camila.moduloautomatizado.repository.ReservaUsuarioRepository;
+import com.camila.moduloautomatizado.repository.UsuarioRepository;
+import com.camila.moduloautomatizado.repository.ValidacionIngresoRepository;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+
 @SpringBootTest(
-        properties = "app.simulation-data.enabled=true"
+        properties = "app.test-base-data.enabled=true"
 )
 @Transactional
 class ValidacionIngresoManualServiceTest {
+
 
     @Autowired
     private ValidacionIngresoService validacionIngresoService;
@@ -43,6 +55,147 @@ class ValidacionIngresoManualServiceTest {
     @Autowired
     private ReservaEstadoRepository reservaEstadoRepository;
 
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private AmbienteRepository ambienteRepository;
+
+    @Autowired
+    private ReservaUsuarioRepository reservaUsuarioRepository;
+
+
+    /*
+     * Método auxiliar para crear una reserva vigente
+     * únicamente dentro de la transacción de cada prueba.
+     */
+    private ReservaUsuario crearReservaVigenteTemporal(
+            String dni,
+            String codigoAmbiente,
+            String codigoReserva) {
+
+        Usuario usuario =
+                usuarioRepository
+                        .findByDni(dni)
+                        .orElseThrow();
+
+        Usuario administrador =
+                usuarioRepository
+                        .findByDni("00000001")
+                        .orElseThrow();
+
+        Ambiente ambiente =
+                ambienteRepository
+                        .findByCodigo(codigoAmbiente)
+                        .orElseThrow();
+
+        LocalDateTime ahora =
+                LocalDateTime.now();
+
+
+        Reserva reserva =
+                new Reserva();
+
+        reserva.setAmbiente(
+                ambiente
+        );
+
+        reserva.setCodigoReserva(
+                codigoReserva
+        );
+
+        reserva.setFechaHoraInicio(
+                ahora.minusMinutes(30)
+        );
+
+        reserva.setFechaHoraFin(
+                ahora.plusMinutes(90)
+        );
+
+        reserva.setToleranciaMinutos(
+                ReglasControlOcupacion.MINUTOS_TOLERANCIA
+        );
+
+        reserva.setFechaCreacion(
+                ahora
+        );
+
+        reserva.setUsuarioCreacion(
+                administrador
+        );
+
+        reservaRepository.saveAndFlush(
+                reserva
+        );
+
+
+        ReservaUsuario reservaUsuario =
+                new ReservaUsuario();
+
+        reservaUsuario.setUsuario(
+                usuario
+        );
+
+        reservaUsuario.setReserva(
+                reserva
+        );
+
+        reservaUsuario.setRolEnReserva(
+                RolEnReserva.RESPONSABLE
+        );
+
+        reservaUsuario.setActivo(
+                true
+        );
+
+        reservaUsuario.setFechaCreacion(
+                ahora
+        );
+
+        reservaUsuario.setUsuarioCreacion(
+                administrador
+        );
+
+        reservaUsuarioRepository.saveAndFlush(
+                reservaUsuario
+        );
+
+
+        ReservaEstado estado =
+                new ReservaEstado();
+
+        estado.setReserva(
+                reserva
+        );
+
+        estado.setEstadoReserva(
+                EstadoReserva.VIGENTE
+        );
+
+        estado.setMotivo(
+                "Estado temporal para prueba manual"
+        );
+
+        estado.setFechaHoraEstado(
+                ahora
+        );
+
+        estado.setFechaCreacion(
+                ahora
+        );
+
+        estado.setUsuarioCreacion(
+                administrador
+        );
+
+        reservaEstadoRepository.saveAndFlush(
+                estado
+        );
+
+        return reservaUsuario;
+    }
+
+
     @Test
     @DisplayName("R3 Manual - Debe identificar correctamente un usuario por DNI")
     void debeIdentificarUsuarioPorDni() {
@@ -52,11 +205,14 @@ class ValidacionIngresoManualServiceTest {
         );
 
         Usuario usuario =
-                validacionIngresoService.identificarUsuarioPorDni(
-                        "10000001"
-                );
+                validacionIngresoService
+                        .identificarUsuarioPorDni(
+                                "10000001"
+                        );
 
-        assertNotNull(usuario);
+        assertNotNull(
+                usuario
+        );
 
         assertEquals(
                 "10000001",
@@ -85,6 +241,7 @@ class ValidacionIngresoManualServiceTest {
         );
     }
 
+
     @Test
     @DisplayName("R3 Manual - Debe identificar correctamente un usuario por código universitario")
     void debeIdentificarUsuarioPorCodigoUniversitario() {
@@ -99,7 +256,9 @@ class ValidacionIngresoManualServiceTest {
                                 "EST0000001"
                         );
 
-        assertNotNull(usuario);
+        assertNotNull(
+                usuario
+        );
 
         assertEquals(
                 "EST0000001",
@@ -128,6 +287,7 @@ class ValidacionIngresoManualServiceTest {
         );
     }
 
+
     @Test
     @DisplayName("R3 Manual - Debe rechazar un DNI no registrado")
     void debeRechazarDniNoRegistrado() {
@@ -139,10 +299,11 @@ class ValidacionIngresoManualServiceTest {
         IllegalArgumentException excepcion =
                 assertThrows(
                         IllegalArgumentException.class,
-                        () -> validacionIngresoService
-                                .identificarUsuarioPorDni(
-                                        "99999999"
-                                )
+                        () ->
+                                validacionIngresoService
+                                        .identificarUsuarioPorDni(
+                                                "99999999"
+                                        )
                 );
 
         assertEquals(
@@ -160,6 +321,7 @@ class ValidacionIngresoManualServiceTest {
         );
     }
 
+
     @Test
     @DisplayName("R3 Manual - Debe rechazar un código universitario no registrado")
     void debeRechazarCodigoUniversitarioNoRegistrado() {
@@ -171,10 +333,11 @@ class ValidacionIngresoManualServiceTest {
         IllegalArgumentException excepcion =
                 assertThrows(
                         IllegalArgumentException.class,
-                        () -> validacionIngresoService
-                                .identificarUsuarioPorCodigoUniversitario(
-                                        "EST9999999"
-                                )
+                        () ->
+                                validacionIngresoService
+                                        .identificarUsuarioPorCodigoUniversitario(
+                                                "EST9999999"
+                                        )
                 );
 
         assertEquals(
@@ -192,6 +355,7 @@ class ValidacionIngresoManualServiceTest {
         );
     }
 
+
     @Test
     @DisplayName("R3 Manual - Debe localizar la reserva vigente sin registrar el ingreso")
     void debeLocalizarReservaVigenteSinRegistrarIngreso() {
@@ -200,10 +364,17 @@ class ValidacionIngresoManualServiceTest {
                 "\n[PRUEBA 5 R3 MANUAL] Buscando reserva vigente del usuario..."
         );
 
+        crearReservaVigenteTemporal(
+                "10000001",
+                "CCSS-AMB-001",
+                "RES-MAN-TEST-005"
+        );
+
         Usuario usuario =
-                validacionIngresoService.identificarUsuarioPorDni(
-                        "10000001"
-                );
+                validacionIngresoService
+                        .identificarUsuarioPorDni(
+                                "10000001"
+                        );
 
         ReservaUsuario reservaUsuario =
                 validacionIngresoService
@@ -211,20 +382,26 @@ class ValidacionIngresoManualServiceTest {
                                 usuario
                         );
 
-        assertNotNull(reservaUsuario);
+        assertNotNull(
+                reservaUsuario
+        );
 
         assertEquals(
                 "10000001",
-                reservaUsuario.getUsuario().getDni()
+                reservaUsuario
+                        .getUsuario()
+                        .getDni()
         );
 
         assertEquals(
-                "RES-SIM-001",
-                reservaUsuario.getReserva().getCodigoReserva()
+                "RES-MAN-TEST-005",
+                reservaUsuario
+                        .getReserva()
+                        .getCodigoReserva()
         );
 
         assertEquals(
-                "AMB-SIM-001",
+                "CCSS-AMB-001",
                 reservaUsuario
                         .getReserva()
                         .getAmbiente()
@@ -232,9 +409,10 @@ class ValidacionIngresoManualServiceTest {
         );
 
         assertFalse(
-                validacionIngresoRepository.existsByReservaUsuario(
-                        reservaUsuario
-                )
+                validacionIngresoRepository
+                        .existsByReservaUsuario(
+                                reservaUsuario
+                        )
         );
 
         System.out.println(
@@ -261,6 +439,7 @@ class ValidacionIngresoManualServiceTest {
         );
     }
 
+
     @Test
     @DisplayName("R3 Manual - Debe rechazar un usuario identificado sin reserva asociada")
     void debeRechazarUsuarioSinReservaAsociada() {
@@ -278,10 +457,11 @@ class ValidacionIngresoManualServiceTest {
         IllegalArgumentException excepcion =
                 assertThrows(
                         IllegalArgumentException.class,
-                        () -> validacionIngresoService
-                                .buscarReservaVigenteParaValidacionManual(
-                                        usuario
-                                )
+                        () ->
+                                validacionIngresoService
+                                        .buscarReservaVigenteParaValidacionManual(
+                                                usuario
+                                        )
                 );
 
         assertEquals(
@@ -306,6 +486,7 @@ class ValidacionIngresoManualServiceTest {
         );
     }
 
+
     @Test
     @DisplayName("R3 Manual - Debe rechazar una reserva que ya terminó")
     void debeRechazarReservaFueraDeHorario() {
@@ -314,6 +495,13 @@ class ValidacionIngresoManualServiceTest {
                 "\n[PRUEBA 7 R3 MANUAL] Buscando reserva fuera de horario..."
         );
 
+        ReservaUsuario reservaUsuarioCreado =
+                crearReservaVigenteTemporal(
+                        "10000002",
+                        "CCSS-AMB-001",
+                        "RES-MAN-TEST-007"
+                );
+
         Usuario usuario =
                 validacionIngresoService
                         .identificarUsuarioPorDni(
@@ -321,13 +509,11 @@ class ValidacionIngresoManualServiceTest {
                         );
 
         Reserva reserva =
-                reservaRepository
-                        .findByCodigoReserva(
-                                "RES-SIM-001"
-                        )
-                        .orElseThrow();
+                reservaUsuarioCreado
+                        .getReserva();
 
-        LocalDateTime ahora = LocalDateTime.now();
+        LocalDateTime ahora =
+                LocalDateTime.now();
 
         reserva.setFechaHoraInicio(
                 ahora.minusHours(2)
@@ -344,10 +530,11 @@ class ValidacionIngresoManualServiceTest {
         IllegalArgumentException excepcion =
                 assertThrows(
                         IllegalArgumentException.class,
-                        () -> validacionIngresoService
-                                .buscarReservaVigenteParaValidacionManual(
-                                        usuario
-                                )
+                        () ->
+                                validacionIngresoService
+                                        .buscarReservaVigenteParaValidacionManual(
+                                                usuario
+                                        )
                 );
 
         assertEquals(
@@ -372,6 +559,7 @@ class ValidacionIngresoManualServiceTest {
         );
     }
 
+
     @Test
     @DisplayName("R3 Manual - Debe rechazar una reserva cuyo último estado no es vigente")
     void debeRechazarReservaConEstadoNoVigente() {
@@ -380,6 +568,13 @@ class ValidacionIngresoManualServiceTest {
                 "\n[PRUEBA 8 R3 MANUAL] Buscando reserva con estado no vigente..."
         );
 
+        ReservaUsuario reservaUsuarioCreado =
+                crearReservaVigenteTemporal(
+                        "10000003",
+                        "CCSS-AMB-001",
+                        "RES-MAN-TEST-008"
+                );
+
         Usuario usuario =
                 validacionIngresoService
                         .identificarUsuarioPorDni(
@@ -387,13 +582,11 @@ class ValidacionIngresoManualServiceTest {
                         );
 
         Reserva reserva =
-                reservaRepository
-                        .findByCodigoReserva(
-                                "RES-SIM-001"
-                        )
-                        .orElseThrow();
+                reservaUsuarioCreado
+                        .getReserva();
 
-        LocalDateTime ahora = LocalDateTime.now();
+        LocalDateTime ahora =
+                LocalDateTime.now();
 
         /*
          * Mantenemos la reserva dentro del horario
@@ -415,7 +608,8 @@ class ValidacionIngresoManualServiceTest {
          * Se agrega un nuevo estado histórico.
          * No se modifica el estado VIGENTE anterior.
          */
-        ReservaEstado estadoCancelado = new ReservaEstado();
+        ReservaEstado estadoCancelado =
+                new ReservaEstado();
 
         estadoCancelado.setReserva(
                 reserva
@@ -430,11 +624,11 @@ class ValidacionIngresoManualServiceTest {
         );
 
         estadoCancelado.setFechaHoraEstado(
-                ahora
+                ahora.plusSeconds(1)
         );
 
         estadoCancelado.setFechaCreacion(
-                ahora
+                ahora.plusSeconds(1)
         );
 
         estadoCancelado.setUsuarioCreacion(
@@ -448,10 +642,11 @@ class ValidacionIngresoManualServiceTest {
         IllegalArgumentException excepcion =
                 assertThrows(
                         IllegalArgumentException.class,
-                        () -> validacionIngresoService
-                                .buscarReservaVigenteParaValidacionManual(
-                                        usuario
-                                )
+                        () ->
+                                validacionIngresoService
+                                        .buscarReservaVigenteParaValidacionManual(
+                                                usuario
+                                        )
                 );
 
         assertEquals(
@@ -476,6 +671,7 @@ class ValidacionIngresoManualServiceTest {
         );
     }
 
+
     @Test
     @DisplayName("R3 Manual - Debe permitir buscar la reserva aunque falten pocos minutos para terminar")
     void debePermitirBusquedaConIngresoTardio() {
@@ -484,6 +680,13 @@ class ValidacionIngresoManualServiceTest {
                 "\n[PRUEBA 9 R3 MANUAL] Buscando reserva con ingreso tardío..."
         );
 
+        ReservaUsuario reservaUsuarioCreado =
+                crearReservaVigenteTemporal(
+                        "10000004",
+                        "CCSS-AMB-001",
+                        "RES-MAN-TEST-009"
+                );
+
         Usuario usuario =
                 validacionIngresoService
                         .identificarUsuarioPorDni(
@@ -491,13 +694,11 @@ class ValidacionIngresoManualServiceTest {
                         );
 
         Reserva reserva =
-                reservaRepository
-                        .findByCodigoReserva(
-                                "RES-SIM-001"
-                        )
-                        .orElseThrow();
+                reservaUsuarioCreado
+                        .getReserva();
 
-        LocalDateTime ahora = LocalDateTime.now();
+        LocalDateTime ahora =
+                LocalDateTime.now();
 
         reserva.setFechaHoraInicio(
                 ahora.minusMinutes(50)
@@ -522,7 +723,7 @@ class ValidacionIngresoManualServiceTest {
         );
 
         assertEquals(
-                "RES-SIM-001",
+                "RES-MAN-TEST-009",
                 reservaUsuario
                         .getReserva()
                         .getCodigoReserva()
@@ -536,9 +737,10 @@ class ValidacionIngresoManualServiceTest {
         );
 
         assertFalse(
-                validacionIngresoRepository.existsByReservaUsuario(
-                        reservaUsuario
-                )
+                validacionIngresoRepository
+                        .existsByReservaUsuario(
+                                reservaUsuario
+                        )
         );
 
         System.out.println(
@@ -554,12 +756,19 @@ class ValidacionIngresoManualServiceTest {
         );
     }
 
+
     @Test
     @DisplayName("R3 Manual - Debe confirmar correctamente una validación manual por DNI")
     void debeConfirmarValidacionManualPorDni() {
 
         System.out.println(
                 "\n[PRUEBA 10 R3 MANUAL] Confirmando validación manual por DNI..."
+        );
+
+        crearReservaVigenteTemporal(
+                "10000001",
+                "CCSS-AMB-001",
+                "RES-MAN-TEST-010"
         );
 
         /*
@@ -582,9 +791,10 @@ class ValidacionIngresoManualServiceTest {
                         );
 
         assertFalse(
-                validacionIngresoRepository.existsByReservaUsuario(
-                        reservaUsuario
-                )
+                validacionIngresoRepository
+                        .existsByReservaUsuario(
+                                reservaUsuario
+                        )
         );
 
         /*
@@ -629,7 +839,7 @@ class ValidacionIngresoManualServiceTest {
         );
 
         assertEquals(
-                "RES-SIM-001",
+                "RES-MAN-TEST-010",
                 validacion
                         .getReservaUsuario()
                         .getReserva()
@@ -637,7 +847,7 @@ class ValidacionIngresoManualServiceTest {
         );
 
         assertEquals(
-                "PVAL-SIM-001",
+                "PVAL-CCSS-001",
                 validacion
                         .getPuntoValidacion()
                         .getCodigoPunto()
@@ -665,12 +875,19 @@ class ValidacionIngresoManualServiceTest {
         );
     }
 
+
     @Test
     @DisplayName("R3 Manual - Debe confirmar correctamente una validación manual por código universitario")
     void debeConfirmarValidacionManualPorCodigoUniversitario() {
 
         System.out.println(
                 "\n[PRUEBA 11 R3 MANUAL] Confirmando validación manual por código universitario..."
+        );
+
+        crearReservaVigenteTemporal(
+                "10000002",
+                "CCSS-AMB-001",
+                "RES-MAN-TEST-011"
         );
 
         Usuario usuario =
@@ -686,9 +903,10 @@ class ValidacionIngresoManualServiceTest {
                         );
 
         assertFalse(
-                validacionIngresoRepository.existsByReservaUsuario(
-                        reservaUsuario
-                )
+                validacionIngresoRepository
+                        .existsByReservaUsuario(
+                                reservaUsuario
+                        )
         );
 
         ValidacionIngreso validacion =
@@ -725,7 +943,7 @@ class ValidacionIngresoManualServiceTest {
         );
 
         assertEquals(
-                "RES-SIM-001",
+                "RES-MAN-TEST-011",
                 validacion
                         .getReservaUsuario()
                         .getReserva()
@@ -733,7 +951,7 @@ class ValidacionIngresoManualServiceTest {
         );
 
         assertEquals(
-                "PVAL-SIM-001",
+                "PVAL-CCSS-001",
                 validacion
                         .getPuntoValidacion()
                         .getCodigoPunto()
@@ -767,12 +985,19 @@ class ValidacionIngresoManualServiceTest {
         );
     }
 
+
     @Test
     @DisplayName("R3 Manual - Debe rechazar una validación manual duplicada")
     void debeRechazarValidacionManualDuplicada() {
 
         System.out.println(
                 "\n[PRUEBA 12 R3 MANUAL] Intentando registrar una validación manual duplicada..."
+        );
+
+        crearReservaVigenteTemporal(
+                "10000003",
+                "CCSS-AMB-001",
+                "RES-MAN-TEST-012"
         );
 
         Usuario usuario =
@@ -812,11 +1037,12 @@ class ValidacionIngresoManualServiceTest {
         IllegalArgumentException excepcion =
                 assertThrows(
                         IllegalArgumentException.class,
-                        () -> validacionIngresoService
-                                .confirmarValidacionManual(
-                                        reservaUsuario,
-                                        TipoIdentificador.DNI
-                                )
+                        () ->
+                                validacionIngresoService
+                                        .confirmarValidacionManual(
+                                                reservaUsuario,
+                                                TipoIdentificador.DNI
+                                        )
                 );
 
         assertEquals(
@@ -834,6 +1060,7 @@ class ValidacionIngresoManualServiceTest {
         );
     }
 
+
     @Test
     @DisplayName("R3 Manual - Debe rechazar la confirmación si la reserva termina después de haber sido localizada")
     void debeRechazarConfirmacionSiReservaTerminaDespuesDeBusqueda() {
@@ -842,6 +1069,13 @@ class ValidacionIngresoManualServiceTest {
                 "\n[PRUEBA 13 R3 MANUAL] Buscando reserva antes de que termine..."
         );
 
+        ReservaUsuario reservaUsuarioCreado =
+                crearReservaVigenteTemporal(
+                        "10000004",
+                        "CCSS-AMB-001",
+                        "RES-MAN-TEST-013"
+                );
+
         Usuario usuario =
                 validacionIngresoService
                         .identificarUsuarioPorDni(
@@ -849,13 +1083,11 @@ class ValidacionIngresoManualServiceTest {
                         );
 
         Reserva reserva =
-                reservaRepository
-                        .findByCodigoReserva(
-                                "RES-SIM-001"
-                        )
-                        .orElseThrow();
+                reservaUsuarioCreado
+                        .getReserva();
 
-        LocalDateTime ahora = LocalDateTime.now();
+        LocalDateTime ahora =
+                LocalDateTime.now();
 
         /*
          * Primero dejamos la reserva vigente para que
@@ -909,11 +1141,12 @@ class ValidacionIngresoManualServiceTest {
         IllegalArgumentException excepcion =
                 assertThrows(
                         IllegalArgumentException.class,
-                        () -> validacionIngresoService
-                                .confirmarValidacionManual(
-                                        reservaUsuario,
-                                        TipoIdentificador.DNI
-                                )
+                        () ->
+                                validacionIngresoService
+                                        .confirmarValidacionManual(
+                                                reservaUsuario,
+                                                TipoIdentificador.DNI
+                                        )
                 );
 
         assertEquals(
@@ -922,9 +1155,10 @@ class ValidacionIngresoManualServiceTest {
         );
 
         assertFalse(
-                validacionIngresoRepository.existsByReservaUsuario(
-                        reservaUsuario
-                )
+                validacionIngresoRepository
+                        .existsByReservaUsuario(
+                                reservaUsuario
+                        )
         );
 
         System.out.println(
@@ -934,6 +1168,243 @@ class ValidacionIngresoManualServiceTest {
         System.out.println(
                 "[PRUEBA 13 R3 MANUAL] Motivo: "
                         + excepcion.getMessage()
+        );
+    }
+
+
+    @Test
+    @DisplayName("R3 Manual - Debe localizar la reserva cuando corresponde a la ubicación seleccionada")
+    void debeLocalizarReservaEnUbicacionSeleccionada() {
+
+        System.out.println(
+                "\n[PRUEBA 14 R3 MANUAL] Buscando reserva en la ubicación correcta..."
+        );
+
+        crearReservaVigenteTemporal(
+                "10000006",
+                "CIA-AMB-001",
+                "RES-MAN-CIA-014"
+        );
+
+        Usuario fabio =
+                validacionIngresoService
+                        .identificarUsuarioPorDni(
+                                "10000006"
+                        );
+
+        Ambiente ambienteCia =
+                ambienteRepository
+                        .findByCodigo(
+                                "CIA-AMB-001"
+                        )
+                        .orElseThrow();
+
+        Integer idUbicacionCia =
+                ambienteCia
+                        .getUbicacion()
+                        .getIdUbicacion();
+
+        ReservaUsuario reservaUsuario =
+                validacionIngresoService
+                        .buscarReservaVigenteParaValidacionManual(
+                                fabio,
+                                idUbicacionCia
+                        );
+
+        assertNotNull(
+                reservaUsuario
+        );
+
+        assertEquals(
+                "RES-MAN-CIA-014",
+                reservaUsuario
+                        .getReserva()
+                        .getCodigoReserva()
+        );
+
+        assertEquals(
+                "CIA-AMB-001",
+                reservaUsuario
+                        .getReserva()
+                        .getAmbiente()
+                        .getCodigo()
+        );
+
+        assertEquals(
+                idUbicacionCia,
+                reservaUsuario
+                        .getReserva()
+                        .getAmbiente()
+                        .getUbicacion()
+                        .getIdUbicacion()
+        );
+
+        System.out.println(
+                "[PRUEBA 14 R3 MANUAL] OK - Reserva localizada en CIA."
+        );
+    }
+
+
+    @Test
+    @DisplayName("R3 Manual - Debe ignorar una reserva vigente perteneciente a otra ubicación")
+    void debeRechazarReservaDeOtraUbicacion() {
+
+        System.out.println(
+                "\n[PRUEBA 15 R3 MANUAL] Buscando desde Ciencias Sociales una reserva perteneciente a CIA..."
+        );
+
+        ReservaUsuario reservaFabio =
+                crearReservaVigenteTemporal(
+                        "10000006",
+                        "CIA-AMB-001",
+                        "RES-MAN-CIA-015"
+                );
+
+        Usuario fabio =
+                validacionIngresoService
+                        .identificarUsuarioPorDni(
+                                "10000006"
+                        );
+
+        Ambiente ambienteSociales =
+                ambienteRepository
+                        .findByCodigo(
+                                "CCSS-AMB-001"
+                        )
+                        .orElseThrow();
+
+        Integer idUbicacionSociales =
+                ambienteSociales
+                        .getUbicacion()
+                        .getIdUbicacion();
+
+        IllegalArgumentException excepcion =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () ->
+                                validacionIngresoService
+                                        .buscarReservaVigenteParaValidacionManual(
+                                                fabio,
+                                                idUbicacionSociales
+                                        )
+                );
+
+        assertEquals(
+                "El usuario no se encuentra asociado a una reserva vigente en la ubicación seleccionada.",
+                excepcion.getMessage()
+        );
+
+        assertFalse(
+                validacionIngresoRepository
+                        .existsByReservaUsuario(
+                                reservaFabio
+                        )
+        );
+
+        System.out.println(
+                "[PRUEBA 15 R3 MANUAL] OK - La reserva de CIA no fue encontrada desde Ciencias Sociales."
+        );
+
+        System.out.println(
+                "[PRUEBA 15 R3 MANUAL] Motivo: "
+                        + excepcion.getMessage()
+        );
+    }
+
+
+    @Test
+    @DisplayName("R3 Manual - Debe confirmar el ingreso cuando la reserva pertenece a la ubicación seleccionada")
+    void debeConfirmarIngresoEnUbicacionCorrecta() {
+
+        System.out.println(
+                "\n[PRUEBA 16 R3 MANUAL] Confirmando ingreso de una reserva en CIA..."
+        );
+
+        crearReservaVigenteTemporal(
+                "10000006",
+                "CIA-AMB-001",
+                "RES-MAN-CIA-016"
+        );
+
+        Usuario fabio =
+                validacionIngresoService
+                        .identificarUsuarioPorDni(
+                                "10000006"
+                        );
+
+        Ambiente ambienteCia =
+                ambienteRepository
+                        .findByCodigo(
+                                "CIA-AMB-001"
+                        )
+                        .orElseThrow();
+
+        Integer idUbicacionCia =
+                ambienteCia
+                        .getUbicacion()
+                        .getIdUbicacion();
+
+        ReservaUsuario reservaUsuario =
+                validacionIngresoService
+                        .buscarReservaVigenteParaValidacionManual(
+                                fabio,
+                                idUbicacionCia
+                        );
+
+        ValidacionIngreso validacion =
+                validacionIngresoService
+                        .confirmarValidacionManual(
+                                reservaUsuario.getIdReservaUsuario(),
+                                TipoIdentificador.DNI,
+                                idUbicacionCia
+                        );
+
+        assertNotNull(
+                validacion
+        );
+
+        assertNotNull(
+                validacion.getIdValidacion()
+        );
+
+        assertEquals(
+                MedioValidacion.INGRESO_MANUAL,
+                validacion.getMedioValidacion()
+        );
+
+        assertEquals(
+                "RES-MAN-CIA-016",
+                validacion
+                        .getReservaUsuario()
+                        .getReserva()
+                        .getCodigoReserva()
+        );
+
+        assertEquals(
+                "CIA-AMB-001",
+                validacion
+                        .getReservaUsuario()
+                        .getReserva()
+                        .getAmbiente()
+                        .getCodigo()
+        );
+
+        assertEquals(
+                "PVAL-CIA-001",
+                validacion
+                        .getPuntoValidacion()
+                        .getCodigoPunto()
+        );
+
+        System.out.println(
+                "[PRUEBA 16 R3 MANUAL] OK - Ingreso confirmado correctamente en CIA."
+        );
+
+        System.out.println(
+                "[PRUEBA 16 R3 MANUAL] Punto utilizado: "
+                        + validacion
+                        .getPuntoValidacion()
+                        .getCodigoPunto()
         );
     }
 }

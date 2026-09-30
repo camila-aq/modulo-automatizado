@@ -135,6 +135,53 @@ public class ValidacionIngresoService {
     }
 
     @Transactional(readOnly = true)
+    public ReservaUsuario buscarReservaVigenteParaValidacionManual(
+            Usuario usuario,
+            Integer idUbicacion) {
+
+        if (idUbicacion == null) {
+            throw new IllegalArgumentException(
+                    "La ubicación es obligatoria para buscar la reserva."
+            );
+        }
+
+        List<ReservaUsuario> asociaciones =
+                reservaUsuarioRepository
+                        .findByUsuarioAndActivoTrue(
+                                usuario
+                        );
+
+        if (asociaciones.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "El usuario no se encuentra asociado a ninguna reserva."
+            );
+        }
+
+        LocalDateTime momento =
+                LocalDateTime.now();
+
+        return asociaciones.stream()
+                .filter(reservaUsuario ->
+                        reservaEstaVigente(
+                                reservaUsuario,
+                                momento
+                        )
+                )
+                .filter(reservaUsuario ->
+                        reservaCorrespondeAUbicacion(
+                                reservaUsuario,
+                                idUbicacion
+                        )
+                )
+                .findFirst()
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "El usuario no se encuentra asociado a una reserva vigente en la ubicación seleccionada."
+                        )
+                );
+    }
+
+    @Transactional(readOnly = true)
     public DetalleReservaManualResponse obtenerDetalleReservaManual(
             ReservaUsuario reservaUsuarioBuscado) {
 
@@ -238,6 +285,54 @@ public class ValidacionIngresoService {
                                 )
                         );
 
+        return confirmarValidacionManual(
+                reservaUsuario,
+                tipoIdentificador
+        );
+    }
+
+    @Transactional
+    public ValidacionIngreso confirmarValidacionManual(
+            Integer idReservaUsuario,
+            TipoIdentificador tipoIdentificador,
+            Integer idUbicacion) {
+
+        if (idUbicacion == null) {
+            throw new IllegalArgumentException(
+                    "La ubicación es obligatoria para confirmar el ingreso."
+            );
+        }
+
+        ReservaUsuario reservaUsuario =
+                reservaUsuarioRepository
+                        .findById(
+                                idReservaUsuario
+                        )
+                        .orElseThrow(() ->
+                                new IllegalArgumentException(
+                                        "No se encontró la asociación del usuario con la reserva."
+                                )
+                        );
+
+        /*
+         * La reserva debe pertenecer al edificio
+         * desde el que se está realizando la validación.
+         */
+        if (!reservaCorrespondeAUbicacion(
+                reservaUsuario,
+                idUbicacion
+        )) {
+
+            throw new IllegalArgumentException(
+                    "La reserva no corresponde a la ubicación seleccionada."
+            );
+        }
+
+        /*
+         * Se reutiliza la lógica existente:
+         * vigencia, duplicidad y obtención
+         * automática del punto de validación.
+         */
         return confirmarValidacionManual(
                 reservaUsuario,
                 tipoIdentificador
@@ -358,6 +453,20 @@ public class ValidacionIngresoService {
                                 == EstadoReserva.VIGENTE
                 )
                 .orElse(false);
+    }
+
+    private boolean reservaCorrespondeAUbicacion(
+            ReservaUsuario reservaUsuario,
+            Integer idUbicacion) {
+
+        return Objects.equals(
+                reservaUsuario
+                        .getReserva()
+                        .getAmbiente()
+                        .getUbicacion()
+                        .getIdUbicacion(),
+                idUbicacion
+        );
     }
 
     private Usuario obtenerUsuarioPorDni(String dni) {

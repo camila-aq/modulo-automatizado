@@ -4,6 +4,7 @@ import com.camila.moduloautomatizado.model.enums.TipoIdentificador;
 
 public record ConfirmarValidacionManualRequest(
         Integer idReservaUsuario,
-        TipoIdentificador tipoIdentificador
+        TipoIdentificador tipoIdentificador,
+        Integer idUbicacion
 ) {
 }
