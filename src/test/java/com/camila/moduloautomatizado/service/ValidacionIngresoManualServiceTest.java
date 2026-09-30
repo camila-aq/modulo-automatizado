@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest(
-        properties = "app.simulation-data.enabled=true"
+        properties = "app.test-base-data.enabled=true"
 )
 @Transactional
 class ValidacionIngresoManualServiceTest {

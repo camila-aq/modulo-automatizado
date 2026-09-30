@@ -274,6 +274,13 @@ document.addEventListener("DOMContentLoaded", () => {
             await cargarGrillaCatalogo();
         }
     );
+    ubicacionReserva.addEventListener(
+        "change",
+        async () => {
+
+            await cargarGrillaCatalogo();
+        }
+    );
 
 
     function cerrarModalValidacion() {
