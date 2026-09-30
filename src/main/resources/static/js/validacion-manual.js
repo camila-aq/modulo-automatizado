@@ -301,15 +301,35 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+        const idUbicacion =
+            ubicacionReserva.value;
+
+        if (!idUbicacion) {
+
+            cerrarModalValidacion();
+
+            mostrarMensaje(
+                "Debe seleccionar una ubicación.",
+                "error"
+            );
+
+            return;
+        }
+
         botonConfirmarValidacion.disabled =
             true;
 
         try {
 
+            /*
+             * Primero se vuelve a localizar la reserva
+             * usando la ubicación actualmente seleccionada.
+             */
             const parametros =
                 new URLSearchParams({
                     tipo: identificador.tipo,
-                    valor: identificador.valor
+                    valor: identificador.valor,
+                    idUbicacion: idUbicacion
                 });
 
             const respuestaDetalle =
@@ -330,6 +350,11 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
 
+            /*
+             * La ubicación también se envía al confirmar.
+             * El backend comprobará nuevamente que
+             * la reserva pertenezca a ese edificio.
+             */
             const respuestaValidacion =
                 await fetch(
                     "/api/validaciones-ingreso/manual/confirmar",
@@ -346,7 +371,10 @@ document.addEventListener("DOMContentLoaded", () => {
                             detalle.idReservaUsuarioBuscado,
 
                             tipoIdentificador:
-                            identificador.tipo
+                            identificador.tipo,
+
+                            idUbicacion:
+                                Number(idUbicacion)
                         })
                     }
                 );
@@ -542,10 +570,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
         try {
 
+            const idUbicacion =
+                ubicacionReserva.value;
+
+            if (!idUbicacion) {
+
+                throw new Error(
+                    "Debe seleccionar una ubicación."
+                );
+            }
+
+            /*
+             * La búsqueda manual se realiza únicamente
+             * dentro de la ubicación seleccionada.
+             */
             const parametros =
                 new URLSearchParams({
                     tipo,
-                    valor
+                    valor,
+                    idUbicacion: idUbicacion
                 });
 
             const respuesta =
@@ -584,11 +627,6 @@ document.addEventListener("DOMContentLoaded", () => {
     async function mostrarReservaEncontrada(
         datos
     ) {
-
-        ubicacionReserva.value =
-            String(
-                datos.idUbicacion
-            );
 
         fechaReserva.value =
             datos.fechaHoraInicio.substring(

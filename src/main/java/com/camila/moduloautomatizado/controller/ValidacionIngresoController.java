@@ -63,7 +63,8 @@ public class ValidacionIngresoController {
     @GetMapping("/manual/reserva")
     public ReservaValidacionManualResponse buscarReservaManual(
             @RequestParam TipoIdentificador tipo,
-            @RequestParam String valor) {
+            @RequestParam String valor,
+            @RequestParam Integer idUbicacion) {
 
         Usuario usuario;
 
@@ -76,8 +77,7 @@ public class ValidacionIngresoController {
                             );
 
         } else if (
-                tipo
-                        == TipoIdentificador.CODIGO_UNIVERSITARIO
+                tipo == TipoIdentificador.CODIGO_UNIVERSITARIO
         ) {
 
             usuario =
@@ -96,7 +96,8 @@ public class ValidacionIngresoController {
         ReservaUsuario reservaUsuario =
                 validacionIngresoService
                         .buscarReservaVigenteParaValidacionManual(
-                                usuario
+                                usuario,
+                                idUbicacion
                         );
 
         return new ReservaValidacionManualResponse(
@@ -141,11 +142,18 @@ public class ValidacionIngresoController {
             );
         }
 
+        if (request.idUbicacion() == null) {
+            throw new IllegalArgumentException(
+                    "La ubicación es obligatoria."
+            );
+        }
+
         ValidacionIngreso validacion =
                 validacionIngresoService
                         .confirmarValidacionManual(
                                 request.idReservaUsuario(),
-                                request.tipoIdentificador()
+                                request.tipoIdentificador(),
+                                request.idUbicacion()
                         );
 
         return new ValidacionIngresoResponse(
@@ -204,7 +212,8 @@ public class ValidacionIngresoController {
     @GetMapping("/manual/detalle")
     public DetalleReservaManualResponse obtenerDetalleReservaManual(
             @RequestParam TipoIdentificador tipo,
-            @RequestParam String valor) {
+            @RequestParam String valor,
+            @RequestParam Integer idUbicacion) {
 
         Usuario usuario;
 
@@ -216,7 +225,9 @@ public class ValidacionIngresoController {
                                     valor
                             );
 
-        } else if (tipo == TipoIdentificador.CODIGO_UNIVERSITARIO) {
+        } else if (
+                tipo == TipoIdentificador.CODIGO_UNIVERSITARIO
+        ) {
 
             usuario =
                     validacionIngresoService
@@ -234,7 +245,8 @@ public class ValidacionIngresoController {
         ReservaUsuario reservaUsuario =
                 validacionIngresoService
                         .buscarReservaVigenteParaValidacionManual(
-                                usuario
+                                usuario,
+                                idUbicacion
                         );
 
         return validacionIngresoService
