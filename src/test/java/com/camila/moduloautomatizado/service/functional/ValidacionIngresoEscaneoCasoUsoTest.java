@@ -1,5 +1,6 @@
 package com.camila.moduloautomatizado.service.functional;
 
+import com.camila.moduloautomatizado.model.entity.EvidenciaPrueba;
 import com.camila.moduloautomatizado.model.entity.PuntoValidacion;
 import com.camila.moduloautomatizado.model.entity.Reserva;
 import com.camila.moduloautomatizado.model.entity.ReservaEstado;
@@ -25,7 +26,11 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -66,6 +71,9 @@ class ValidacionIngresoEscaneoCasoUsoTest {
     @Autowired
     private EntityManager entityManager;
 
+    @Autowired
+    private PlatformTransactionManager transactionManager;
+
 
     // CP-R3-CU01
     @Test
@@ -73,176 +81,236 @@ class ValidacionIngresoEscaneoCasoUsoTest {
     void debeAceptarValidacionMedianteEscaneoSimulado()
             throws InterruptedException {
 
-        System.out.println(
-                """
-                ========================================
-                CP-R3-CU01
-                Validación aceptada mediante escaneo simulado
-                ========================================
-                """
-        );
+        String codigoCaso = "CP-R3-CU01";
+        String accion =  "Escaneo del DNI " + DNI + " en el punto " + CODIGO_PUNTO + ".";
+        String resultadoEsperado = "La validación debe ser aceptada y el ingreso registrado.";
+        String precondiciones = "No fue posible verificar las precondiciones.";
 
-        Reserva reserva = reservaRepository
-                .findByCodigoReserva(CODIGO_RESERVA)
-                .orElseThrow(() ->
-                        new IllegalStateException(
-                                "No existe la reserva "
-                                + CODIGO_RESERVA + "."
-                        )
-                );
+        imprimirCabecera(codigoCaso,"Validación aceptada mediante escaneo simulado");
 
-        assertEquals(
-                CODIGO_AMBIENTE,
-                reserva.getAmbiente().getCodigo(),
-                "La reserva no corresponde al ambiente esperado."
-        );
+        try {
+            //PRECONDICIONES
 
-        PuntoValidacion puntoValidacion =
-                puntoValidacionRepository
-                        .findByCodigoPuntoAndActivoTrue(CODIGO_PUNTO)
-                        .orElseThrow(() ->
-                                new IllegalStateException(
-                                        "No existe un punto activo con código "
-                                        + CODIGO_PUNTO + "."
-                                )
-                        );
+            Reserva reserva =
+                    reservaRepository
+                            .findByCodigoReserva(CODIGO_RESERVA)
+                            .orElseThrow(() ->
+                                    new IllegalStateException(
+                                            "No existe la reserva " + CODIGO_RESERVA + "."
+                                    )
+                            );
 
-        assertEquals(
-                reserva.getAmbiente().getIdAmbiente(),
-                puntoValidacion.getAmbiente().getIdAmbiente(),
-                "El punto de validación no pertenece al ambiente de la reserva."
-        );
+            assertEquals(
+                    CODIGO_AMBIENTE,
+                    reserva.getAmbiente().getCodigo(),
+                    "La reserva no corresponde al ambiente esperado."
+            );
 
-        ReservaUsuario reservaUsuario =
-                reservaUsuarioRepository
-                        .findByReservaAndActivoTrueOrderByIdReservaUsuarioAsc(reserva)
-                        .stream()
-                        .filter(
-                                asociacion -> DNI.equals(asociacion.getUsuario().getDni())
-                        )
-                        .findFirst()
-                        .orElseThrow(() ->
-                                new IllegalStateException(
-                                        "El usuario con DNI "
-                                        + DNI + " no se encuentra asociado a "
-                                        + CODIGO_RESERVA + "."
-                                )
-                        );
+            PuntoValidacion puntoValidacion =
+                    puntoValidacionRepository
+                            .findByCodigoPuntoAndActivoTrue(CODIGO_PUNTO)
+                            .orElseThrow(() ->
+                                    new IllegalStateException(
+                                            "No existe un punto activo " + "con código "
+                                            + CODIGO_PUNTO + "."
+                                    )
+                            );
 
-        ReservaEstado ultimoEstado =
-                reservaEstadoRepository
-                        .findTopByReservaOrderByFechaHoraEstadoDesc(reserva)
-                        .orElseThrow(() ->
-                                new IllegalStateException(
-                                        "La reserva no tiene un estado registrado."
-                                )
-                        );
+            assertEquals(
+                    reserva.getAmbiente().getIdAmbiente(),
+                    puntoValidacion.getAmbiente().getIdAmbiente(),
+                    "El punto de validación no pertenece al ambiente de la reserva."
+            );
 
-        assertEquals(
-                EstadoReserva.VIGENTE,
-                ultimoEstado.getEstadoReserva(),
-                "La reserva no tiene estado VIGENTE."
-        );
+            ReservaUsuario reservaUsuario =
+                    reservaUsuarioRepository
+                            .findByReservaAndActivoTrueOrderByIdReservaUsuarioAsc(reserva)
+                            .stream()
+                            .filter(asociacion -> DNI.equals(asociacion.getUsuario().getDni()))
+                            .findFirst()
+                            .orElseThrow(() ->
+                                    new IllegalStateException(
+                                            "El usuario con DNI " + DNI
+                                            + " no se encuentra asociado a "
+                                            + CODIGO_RESERVA + "."
+                                    )
+                            );
 
-        LocalDateTime ahora = LocalDateTime.now();
+            ReservaEstado ultimoEstado =
+                    reservaEstadoRepository
+                            .findTopByReservaOrderByFechaHoraEstadoDesc(reserva)
+                            .orElseThrow(() ->
+                                    new IllegalStateException(
+                                            "La reserva no tiene un estado registrado."
+                                    )
+                            );
 
-        LocalDateTime inicioPermitido =
-                reserva
-                        .getFechaHoraInicio()
-                        .minusMinutes(ReglasControlOcupacion.MINUTOS_ANTICIPACION);
+            assertEquals(
+                    EstadoReserva.VIGENTE,
+                    ultimoEstado.getEstadoReserva(),
+                    "La reserva no tiene estado VIGENTE."
+            );
 
+            LocalDateTime ahora = LocalDateTime.now();
+            LocalDateTime inicioPermitido =
+                    reserva
+                            .getFechaHoraInicio()
+                            .minusMinutes(ReglasControlOcupacion.MINUTOS_ANTICIPACION);
 
-        assertTrue(
-                !ahora.isBefore(inicioPermitido) && ahora.isBefore(reserva.getFechaHoraFin()),
-                "La reserva ya no se encuentra dentro " +
-                        "del periodo permitido para ejecutar CP-R3-CU01."
-        );
+            assertTrue(
+                    !ahora.isBefore(inicioPermitido) && ahora.isBefore(reserva.getFechaHoraFin()),
+                    "La reserva no se encuentra dentro del periodo permitido."
+            );
 
-        assertFalse(
-                validacionIngresoRepository.existsByReservaUsuario(reservaUsuario),
-                "CP-R3-CU01 no puede comenzar porque el usuario ya posee " +
-                        "una validación para esta reserva."
-        );
+            assertFalse(
+                    validacionIngresoRepository.existsByReservaUsuario(reservaUsuario),
+                    "El usuario ya posee una validación para esta reserva."
+            );
 
-        imprimirPrecondiciones(
-                "CP-R3-CU01",
-                reservaUsuario.getUsuario().getNombres() + " "
-                        + reservaUsuario.getUsuario().getApellidos(),
-                reserva.getAmbiente().getCodigo(),
-                "Reserva vigente",
-                "No existe validación aceptada previa"
-        );
+            precondiciones =
+                    """
+                    Estudiante: %s %s
+                    Ambiente: %s
+                    Reserva vigente
+                    No existe validación aceptada previa
+                    """.formatted(
+                            reservaUsuario.getUsuario().getNombres(),
+                            reservaUsuario.getUsuario().getApellidos(),
+                            reserva.getAmbiente().getCodigo()
+                    ).trim();
 
-        imprimirInstrucciones1();
+            imprimirPrecondiciones(precondiciones);
+            imprimirInstrucciones(accion,resultadoEsperado);
 
-        //ESPERAR EL MOVIMIENTO REAL DEL USUARIO
-        ValidacionIngreso validacion = esperarValidacion(reservaUsuario);
+            ValidacionIngreso validacion = esperarValidacion(reservaUsuario);
 
-        // CONTRASTAR RESULTADO ESPERADO Y REAL
-        entityManager.refresh(validacion);
+            entityManager.refresh(validacion);
 
-        assertAll(
-                "Resultado de CP-R3-CU01",
-                () ->
-                        assertNotNull(
-                                validacion.getIdValidacion(),
-                                "No se generó ID de validación."
-                        ),
-                () ->
-                        assertEquals(
-                                DNI,
-                                validacion.getReservaUsuario().getUsuario().getDni(),
-                                "El DNI registrado no corresponde."
-                        ),
-                () ->
-                        assertEquals(
-                                CODIGO_RESERVA,
-                                validacion.getReservaUsuario().getReserva().getCodigoReserva(),
-                                "La reserva registrada no corresponde."
-                        ),
-                () ->
-                        assertEquals(
-                                CODIGO_AMBIENTE,
-                                validacion.getReservaUsuario().getReserva().getAmbiente().getCodigo(),
-                                "El ambiente registrado no corresponde."
-                        ),
-                () ->
-                        assertEquals(
-                                CODIGO_PUNTO,
-                                validacion.getPuntoValidacion().getCodigoPunto(),
-                                "El punto de validación no corresponde."
-                        ),
-                () ->
-                        assertEquals(
-                                MedioValidacion.ESCANEO_SIMULADO,
-                                validacion.getMedioValidacion(),
-                                "El medio de validación no corresponde."
-                        ),
-                () ->
-                        assertEquals(
-                                TipoIdentificador.DNI,
-                                validacion.getTipoIdentificador(),
-                                "El tipo de identificador no corresponde."
-                        ),
-                () ->
-                        assertNotNull(
-                                validacion.getFechaHoraValidacion(),
-                                "No se registró fecha y hora de validación."
-                        )
-        );
+            assertAll(
+                    "Resultado de CP-R3-CU01",
+                    () ->
+                            assertNotNull(
+                                    validacion.getIdValidacion(),
+                                    "No se generó ID de validación."
+                            ),
+                    () ->
+                            assertEquals(
+                                    DNI,
+                                    validacion.getReservaUsuario().getUsuario().getDni(),
+                                    "El DNI registrado no corresponde."
+                            ),
+                    () ->
+                            assertEquals(
+                                    CODIGO_RESERVA,
+                                    validacion.getReservaUsuario().getReserva().getCodigoReserva(),
+                                    "La reserva registrada no corresponde."
+                            ),
+                    () ->
+                            assertEquals(
+                                    CODIGO_AMBIENTE,
+                                    validacion.getReservaUsuario().getReserva().getAmbiente().getCodigo(),
+                                    "El ambiente registrado no corresponde."
+                            ),
+                    () ->
+                            assertEquals(
+                                    CODIGO_PUNTO,
+                                    validacion.getPuntoValidacion().getCodigoPunto(),
+                                    "El punto de validación no corresponde."
+                            ),
+                    () ->
+                            assertEquals(
+                                    MedioValidacion.ESCANEO_SIMULADO,
+                                    validacion.getMedioValidacion(),
+                                    "El medio de validación no corresponde."
+                            ),
+                    () ->
+                            assertEquals(
+                                    TipoIdentificador.DNI,
+                                    validacion.getTipoIdentificador(),
+                                    "El tipo de identificador no corresponde."
+                            ),
+                    () ->
+                            assertNotNull(
+                                    validacion.getFechaHoraValidacion(),
+                                    "No se registró fecha y hora."
+                            )
+            );
 
-        // MOSTRAR RESULTADO REAL
-        imprimirResultado(
-                "CP-R3-CU01",
-                "Validación registrada.",
-                "Reserva: " + validacion.getReservaUsuario().getReserva().getCodigoReserva(),
-                "Punto: " + validacion.getPuntoValidacion().getCodigoPunto(),
-                "Medio: " + validacion.getMedioValidacion(),
-                "Fecha y hora: " + validacion.getFechaHoraValidacion()
-        );
+            String resultadoReal =
+                    """
+                    Validación registrada.
+                    Reserva: %s
+                    Punto: %s
+                    Medio: %s
+                    Fecha y hora: %s
+                    """.formatted(
+                            validacion.getReservaUsuario().getReserva().getCodigoReserva(),
+                            validacion.getPuntoValidacion().getCodigoPunto(),
+                            validacion .getMedioValidacion(),
+                            validacion.getFechaHoraValidacion()
+                    ).trim();
+
+            guardarEvidencia(
+                    codigoCaso,
+                    precondiciones,
+                    accion,
+                    resultadoEsperado,
+                    resultadoReal,
+                    "APROBADA"
+            );
+
+            imprimirResultado(
+                    codigoCaso,
+                    resultadoReal,
+                    "APROBADA"
+            );
+
+        } catch (AssertionError | RuntimeException e) {
+
+            String resultadoReal = "Prueba no superada: " + obtenerMensajeError(e);
+
+            guardarEvidencia(
+                    codigoCaso,
+                    precondiciones,
+                    accion,
+                    resultadoEsperado,
+                    resultadoReal,
+                    "NO_APROBADA"
+            );
+
+            imprimirResultado(
+                    codigoCaso,
+                    resultadoReal,
+                    "NO_APROBADA"
+            );
+
+            throw e;
+
+        } catch (InterruptedException e) {
+
+            Thread.currentThread().interrupt();
+
+            String resultadoReal = "Prueba interrumpida antes de completar la validación.";
+
+            guardarEvidencia(
+                    codigoCaso,
+                    precondiciones,
+                    accion,
+                    resultadoEsperado,
+                    resultadoReal,
+                    "NO_APROBADA"
+            );
+
+            imprimirResultado(
+                    codigoCaso,
+                    resultadoReal,
+                    "NO_APROBADA"
+            );
+
+            throw e;
+        }
     }
 
-    //ESPERA DEL MOVIMIENTO REAL EN EL FRONT
 
     private ValidacionIngreso esperarValidacion(
             ReservaUsuario reservaUsuario)
@@ -250,15 +318,12 @@ class ValidacionIngresoEscaneoCasoUsoTest {
 
         long momentoLimite = System.currentTimeMillis() + TIEMPO_MAXIMO_ESPERA_MS;
 
+        while ( System.currentTimeMillis() < momentoLimite ) {
 
-        while (System.currentTimeMillis() < momentoLimite) {
             entityManager.clear();
 
             ValidacionIngreso validacion =
-                    buscarValidacionRegistrada(
-                            reservaUsuario.getIdReservaUsuario()
-                    );
-
+                    buscarValidacionRegistrada(reservaUsuario.getIdReservaUsuario());
 
             if (validacion != null) {
                 return validacion;
@@ -267,16 +332,10 @@ class ValidacionIngresoEscaneoCasoUsoTest {
             Thread.sleep(INTERVALO_CONSULTA_MS);
         }
 
-        throw new AssertionError(
-                """
-                CP-R3-CU01 - PRUEBA NO SUPERADA
-                No se detectó la validación esperada en la base de datos.
-                """
+        throw new AssertionError("No se detectó la validación esperada en la base de datos."
         );
     }
 
-
-//BÚSQUEDA DEL RESULTADO EN BD
     private ValidacionIngreso buscarValidacionRegistrada(
             Integer idReservaUsuario) {
 
@@ -293,45 +352,98 @@ class ValidacionIngresoEscaneoCasoUsoTest {
                 .orElse(null);
     }
 
-
-//SALIDA EN CONSOLA
-    private void imprimirPrecondiciones(
+    private void guardarEvidencia(
             String codigoCaso,
-            String estudiante,
-            String ambiente,
-            String... condiciones) {
+            String precondiciones,
+            String accion,
+            String resultadoEsperado,
+            String resultadoReal,
+            String estado) {
 
-        System.out.println("\nPrecondiciones " + codigoCaso + ":");
-        System.out.println("- Estudiante: " + estudiante);
-        System.out.println("- Ambiente: " + ambiente);
-        for (String condicion : condiciones)  System.out.println( "- " + condicion);
-        System.out.println();
+        TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+
+        transactionTemplate.setPropagationBehavior(
+                TransactionDefinition.PROPAGATION_REQUIRES_NEW
+        );
+
+        transactionTemplate.executeWithoutResult(
+                status -> {
+
+                    EvidenciaPrueba evidencia = new EvidenciaPrueba();
+                    evidencia.setCodigoCaso(codigoCaso);
+                    evidencia.setFechaHoraEjecucion(LocalDateTime.now());
+                    evidencia.setPrecondiciones(precondiciones);
+                    evidencia.setAccion(accion);
+                    evidencia.setResultadoEsperado(resultadoEsperado);
+                    evidencia.setResultadoReal(resultadoReal);
+                    evidencia.setEstado(estado);
+
+                    entityManager.persist(evidencia);
+                    entityManager.flush();
+                }
+        );
     }
 
-
-    private void imprimirInstrucciones1() {
+    private void imprimirCabecera(
+            String codigoCaso,
+            String nombreCaso) {
 
         System.out.println(
                 """
-                Acción: Realizar desde el front el escaneo del DNI 10000001 en el punto PVAL-CCSS-001.
-                Esperado: La validación debe ser aceptada y el ingreso registrado.
+                ========================================
+                %s - %s
+                ========================================
+                """.formatted(codigoCaso,nombreCaso)
+        );
+    }
+
+    private void imprimirPrecondiciones(
+            String precondiciones) {
+
+        System.out.println("Precondiciones:\n" + precondiciones + "\n");
+    }
+
+    private void imprimirInstrucciones(
+            String accion,
+            String resultadoEsperado) {
+
+        System.out.println(
+                """
+                Acción: %s
+                
+                Esperado: %s
                 
                 Esperando acción desde el front...
-                """
+                """.formatted(
+                        accion,
+                        resultadoEsperado
+                )
         );
     }
 
 
     private void imprimirResultado(
             String codigoCaso,
-            String resultado,
-            String... datos) {
+            String resultadoReal,
+            String estado) {
 
-        System.out.println("\nResultado real:");
-        System.out.println(resultado);
-        for (String dato : datos)  System.out.println("- " + dato);
-        System.out.println("\n" + codigoCaso + " - PRUEBA SUPERADA");
-        System.out.println("========================================"
+        System.out.println(
+                """
+                Resultado real: %s
+                
+                %s - %s
+                ========================================
+                """.formatted(resultadoReal,codigoCaso,estado)
         );
+    }
+
+    private String obtenerMensajeError(
+            Throwable error) {
+
+        if ( error.getMessage() == null || error.getMessage().isBlank() ) {
+            return error.getClass().getSimpleName();
+        }
+
+        return error.getMessage();
     }
 }
