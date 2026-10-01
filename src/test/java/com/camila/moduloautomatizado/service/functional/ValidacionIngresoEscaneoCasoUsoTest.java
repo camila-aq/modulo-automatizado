@@ -18,6 +18,8 @@ import com.camila.moduloautomatizado.repository.ReservaEstadoRepository;
 import com.camila.moduloautomatizado.repository.ReservaRepository;
 import com.camila.moduloautomatizado.repository.ReservaUsuarioRepository;
 import com.camila.moduloautomatizado.repository.ValidacionIngresoRepository;
+import com.camila.moduloautomatizado.repository.UsuarioRepository;
+import com.camila.moduloautomatizado.service.ValidacionIngresoService;
 
 import jakarta.persistence.EntityManager;
 
@@ -26,11 +28,15 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
+
+import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.verify;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -52,6 +58,7 @@ class ValidacionIngresoEscaneoCasoUsoTest {
     private static final String DNI = "10000001";
     private static final long TIEMPO_MAXIMO_ESPERA_MS = 300_000;
     private static final long INTERVALO_CONSULTA_MS = 500;
+    private static final String DNI_NO_REGISTRADO = "99999999";
 
     @Autowired
     private ReservaRepository reservaRepository;
@@ -69,10 +76,16 @@ class ValidacionIngresoEscaneoCasoUsoTest {
     private ValidacionIngresoRepository validacionIngresoRepository;
 
     @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    @Autowired
     private EntityManager entityManager;
 
     @Autowired
     private PlatformTransactionManager transactionManager;
+
+    @MockitoSpyBean
+    private ValidacionIngresoService validacionIngresoService;
 
 
     // CP-R3-CU01
@@ -311,6 +324,107 @@ class ValidacionIngresoEscaneoCasoUsoTest {
         }
     }
 
+    // CP-R3-CU02
+    @Test
+    @DisplayName("CP-R3-CU02 - DNI no registrado")
+    void debeRechazarDniNoRegistrado() {
+
+        String codigoCaso = "CP-R3-CU02";
+        String accion = "Escaneo del DNI " + DNI_NO_REGISTRADO + " en el punto " + CODIGO_PUNTO + ".";
+        String resultadoEsperado = "La validación debe ser rechazada " + "y no debe registrarse el ingreso.";
+        String precondiciones = "No fue posible verificar las precondiciones.";
+
+        imprimirCabecera(codigoCaso,"DNI no registrado");
+
+        try {
+
+            assertTrue(
+                    usuarioRepository
+                            .findByDni(DNI_NO_REGISTRADO).isEmpty(),
+                    "El DNI utilizado para CP-R3-CU02 se encuentra registrado."
+            );
+
+            PuntoValidacion puntoValidacion =
+                    puntoValidacionRepository
+                            .findByCodigoPuntoAndActivoTrue(CODIGO_PUNTO)
+                            .orElseThrow(() ->
+                                    new IllegalStateException(
+                                            "No existe un punto activo con código "
+                                            + CODIGO_PUNTO + "."
+                                    )
+                            );
+
+            precondiciones =
+                    """
+                    DNI: %s no registrado
+                    Ambiente: %s
+                    Punto de validación activo
+                    """.formatted(
+                            DNI_NO_REGISTRADO,
+                            puntoValidacion.getAmbiente().getCodigo()
+                    ).trim();
+
+            imprimirPrecondiciones(precondiciones);
+
+            long validacionesAntes = validacionIngresoRepository.count();
+
+            imprimirInstrucciones(accion,resultadoEsperado);
+
+            esperarAccionEscaneo(DNI_NO_REGISTRADO,CODIGO_PUNTO);
+
+            entityManager.clear();
+
+            long validacionesDespues = validacionIngresoRepository.count();
+
+            assertEquals(
+                    validacionesAntes,
+                    validacionesDespues,
+                    "Se registró una nueva validación de ingreso para un DNI no registrado."
+            );
+
+            String resultadoReal =
+                    """
+                    Validación rechazada.
+                    No se registró una nueva validación de ingreso.
+                    """.trim();
+
+            guardarEvidencia(
+                    codigoCaso,
+                    precondiciones,
+                    accion,
+                    resultadoEsperado,
+                    resultadoReal,
+                    "APROBADA"
+            );
+
+            imprimirResultado(codigoCaso,resultadoReal,"APROBADA");
+
+        } catch (AssertionError | RuntimeException e) {
+
+            String resultadoReal = "Prueba no superada: " + obtenerMensajeError(e);
+
+            guardarEvidencia(
+                    codigoCaso,
+                    precondiciones,
+                    accion,
+                    resultadoEsperado,
+                    resultadoReal,
+                    "NO_APROBADA"
+            );
+
+            imprimirResultado(codigoCaso,resultadoReal,"NO_APROBADA");
+
+            throw e;
+        }
+    }
+
+    private void esperarAccionEscaneo(
+            String dni,
+            String codigoPunto) {
+
+        verify(validacionIngresoService,timeout(TIEMPO_MAXIMO_ESPERA_MS))
+                .validarIngresoPorEscaneo(dni,codigoPunto);
+    }
 
     private ValidacionIngreso esperarValidacion(
             ReservaUsuario reservaUsuario)
