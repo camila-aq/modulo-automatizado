@@ -114,6 +114,166 @@ public class DatosBaseInitializer
                             "Javier",
                             "León",
                             "javier.leon@simulado.example"
+                    ),
+
+                    new UsuarioBase(
+                            "EST0000011",
+                            "10000011",
+                            "Karen",
+                            "Navarro",
+                            "karen.navarro@simulado.example"
+                    ),
+
+                    new UsuarioBase(
+                            "EST0000012",
+                            "10000012",
+                            "Luis",
+                            "Paredes",
+                            "luis.paredes@simulado.example"
+                    ),
+
+                    new UsuarioBase(
+                            "EST0000013",
+                            "10000013",
+                            "Mariana",
+                            "Flores",
+                            "mariana.flores@simulado.example"
+                    ),
+
+                    new UsuarioBase(
+                            "EST0000014",
+                            "10000014",
+                            "Nicolás",
+                            "Herrera",
+                            "nicolas.herrera@simulado.example"
+                    ),
+
+                    new UsuarioBase(
+                            "EST0000015",
+                            "10000015",
+                            "Olivia",
+                            "Cárdenas",
+                            "olivia.cardenas@simulado.example"
+                    ),
+
+                    new UsuarioBase(
+                            "EST0000016",
+                            "10000016",
+                            "Pedro",
+                            "Ramírez",
+                            "pedro.ramirez@simulado.example"
+                    ),
+
+                    new UsuarioBase(
+                            "EST0000017",
+                            "10000017",
+                            "Renata",
+                            "Campos",
+                            "renata.campos@simulado.example"
+                    ),
+
+                    new UsuarioBase(
+                            "EST0000018",
+                            "10000018",
+                            "Sebastián",
+                            "Valdez",
+                            "sebastian.valdez@simulado.example"
+                    ),
+
+                    new UsuarioBase(
+                            "EST0000019",
+                            "10000019",
+                            "Tatiana",
+                            "Aguilar",
+                            "tatiana.aguilar@simulado.example"
+                    ),
+
+                    new UsuarioBase(
+                            "EST0000020",
+                            "10000020",
+                            "Ulises",
+                            "Peña",
+                            "ulises.pena@simulado.example"
+                    ),
+
+                    new UsuarioBase(
+                            "EST0000021",
+                            "10000021",
+                            "Valeria",
+                            "Espinoza",
+                            "valeria.espinoza@simulado.example"
+                    ),
+
+                    new UsuarioBase(
+                            "EST0000022",
+                            "10000022",
+                            "Walter",
+                            "Chávez",
+                            "walter.chavez@simulado.example"
+                    ),
+
+                    new UsuarioBase(
+                            "EST0000023",
+                            "10000023",
+                            "Ximena",
+                            "Fuentes",
+                            "ximena.fuentes@simulado.example"
+                    ),
+
+                    new UsuarioBase(
+                            "EST0000024",
+                            "10000024",
+                            "Yahir",
+                            "Molina",
+                            "yahir.molina@simulado.example"
+                    ),
+
+                    new UsuarioBase(
+                            "EST0000025",
+                            "10000025",
+                            "Zoe",
+                            "Reyes",
+                            "zoe.reyes@simulado.example"
+                    ),
+
+                    new UsuarioBase(
+                            "EST0000026",
+                            "10000026",
+                            "Andrés",
+                            "Delgado",
+                            "andres.delgado@simulado.example"
+                    ),
+
+                    new UsuarioBase(
+                            "EST0000027",
+                            "10000027",
+                            "Beatriz",
+                            "Miranda",
+                            "beatriz.miranda@simulado.example"
+                    ),
+
+                    new UsuarioBase(
+                            "EST0000028",
+                            "10000028",
+                            "Cristian",
+                            "Ortega",
+                            "cristian.ortega@simulado.example"
+                    ),
+
+                    new UsuarioBase(
+                            "EST0000029",
+                            "10000029",
+                            "Daniela",
+                            "Cabrera",
+                            "daniela.cabrera@simulado.example"
+                    ),
+
+                    new UsuarioBase(
+                            "EST0000030",
+                            "10000030",
+                            "Emilio",
+                            "Silva",
+                            "emilio.silva@simulado.example"
                     )
             );
 
