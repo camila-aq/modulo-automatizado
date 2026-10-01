@@ -52,6 +52,9 @@ class ValidacionIngresoManualCasoUsoTest {
     private static final long TIEMPO_MAXIMO_ESPERA_MS = 300_000;
     private static final long INTERVALO_CONSULTA_MS = 500;
 
+    private static final String DNI_CODIGO_UNIVERSITARIO = "10000003";
+    private static final String CODIGO_UNIVERSITARIO = "EST0000003";
+
     private static final String DNI = "10000002";
 
     @Autowired
@@ -252,6 +255,277 @@ class ValidacionIngresoManualCasoUsoTest {
                     () ->
                             assertEquals(
                                     TipoIdentificador.DNI,
+                                    validacion.getTipoIdentificador(),
+                                    "El tipo de identificador no corresponde."
+                            ),
+                    () ->
+                            assertNotNull(
+                                    validacion.getFechaHoraValidacion(),
+                                    "No se registró fecha y hora."
+                            )
+            );
+
+            String resultadoReal =
+                    """
+                    Validación registrada.
+                    Reserva: %s
+                    Ubicación: %s
+                    Ambiente: %s
+                    Punto: %s
+                    Medio: %s
+                    Tipo de identificador: %s
+                    Fecha y hora: %s
+                    """.formatted(
+                            validacion.getReservaUsuario().getReserva().getCodigoReserva(),
+                            validacion.getReservaUsuario().getReserva().getAmbiente().getUbicacion().getNombre(),
+                            validacion.getReservaUsuario().getReserva().getAmbiente().getCodigo(),
+                            validacion.getPuntoValidacion().getCodigoPunto(),
+                            validacion.getMedioValidacion(),
+                            validacion.getTipoIdentificador(),
+                            validacion.getFechaHoraValidacion()
+                    ).trim();
+
+            guardarEvidencia(
+                    codigoCaso,
+                    precondiciones,
+                    accion,
+                    resultadoEsperado,
+                    resultadoReal,
+                    "APROBADA"
+            );
+
+            imprimirResultado(codigoCaso,resultadoReal,"APROBADA");
+
+        } catch (AssertionError | RuntimeException e) {
+
+            String resultadoReal = "Prueba no superada: " + obtenerMensajeError(e);
+
+            guardarEvidencia(
+                    codigoCaso,
+                    precondiciones,
+                    accion,
+                    resultadoEsperado,
+                    resultadoReal,
+                    "NO_APROBADA"
+            );
+
+            imprimirResultado(codigoCaso,resultadoReal,"NO_APROBADA");
+
+            throw e;
+
+        } catch (InterruptedException e) {
+
+            Thread.currentThread().interrupt();
+
+            String resultadoReal =
+                    "Prueba interrumpida antes de completar la validación.";
+
+            guardarEvidencia(
+                    codigoCaso,
+                    precondiciones,
+                    accion,
+                    resultadoEsperado,
+                    resultadoReal,
+                    "NO_APROBADA"
+            );
+
+            imprimirResultado(codigoCaso,resultadoReal,"NO_APROBADA");
+
+            throw e;
+        }
+    }
+
+    // CP-R3-CU08
+    @Test
+    @DisplayName("CP-R3-CU08 - Validación manual aceptada mediante código universitario")
+    void debeAceptarValidacionManualMedianteCodigoUniversitario()
+            throws InterruptedException {
+
+        String codigoCaso = "CP-R3-CU08";
+        String accion = "Ingreso del código universitario " + CODIGO_UNIVERSITARIO
+                + ", localización de la reserva y confirmación manual del ingreso.";
+        String resultadoEsperado = "Resultado esperado: El módulo acepta la validación, registra la " +
+                "fecha y hora de ingreso y muestra el resultado correspondiente.\n\n" +
+                "Objetivo: Verificar el flujo básico de validación manual utilizando " +
+                "el código universitario.";
+        String precondiciones = "No fue posible verificar las precondiciones.";
+
+        imprimirCabecera(codigoCaso,"Validación manual aceptada mediante código universitario");
+
+        try {
+
+            var usuario =
+                    usuarioRepository
+                            .findByCodigoUniversitario(CODIGO_UNIVERSITARIO)
+                            .orElseThrow(() ->
+                                    new IllegalStateException(
+                                            "No existe el usuario con código universitario "
+                                                    + CODIGO_UNIVERSITARIO + "."
+                                    )
+                            );
+
+            assertEquals(
+                    DNI_CODIGO_UNIVERSITARIO,
+                    usuario.getDni(),
+                    "El código universitario no corresponde al estudiante esperado."
+            );
+
+            Reserva reserva =
+                    reservaRepository
+                            .findByCodigoReserva(CODIGO_RESERVA)
+                            .orElseThrow(() ->
+                                    new IllegalStateException(
+                                            "No existe la reserva " + CODIGO_RESERVA + "."
+                                    )
+                            );
+
+            assertEquals(
+                    CODIGO_AMBIENTE,
+                    reserva.getAmbiente().getCodigo(),
+                    "La reserva no corresponde al ambiente esperado."
+            );
+
+            assertEquals(
+                    NOMBRE_UBICACION,
+                    reserva.getAmbiente().getUbicacion().getNombre(),
+                    "La reserva no corresponde a la ubicación esperada."
+            );
+
+            ReservaUsuario reservaUsuario =
+                    reservaUsuarioRepository
+                            .findByReservaAndUsuario(reserva,usuario)
+                            .orElseThrow(() ->
+                                    new IllegalStateException(
+                                            "El estudiante no se encuentra asociado a la reserva."
+                                    )
+                            );
+
+            assertTrue(
+                    reservaUsuario.getActivo(),
+                    "La asociación del estudiante con la reserva no está activa."
+            );
+
+            ReservaEstado ultimoEstado =
+                    reservaEstadoRepository
+                            .findTopByReservaOrderByFechaHoraEstadoDesc(reserva)
+                            .orElseThrow(() ->
+                                    new IllegalStateException(
+                                            "La reserva no tiene un estado registrado."
+                                    )
+                            );
+
+            assertEquals(
+                    EstadoReserva.VIGENTE,
+                    ultimoEstado.getEstadoReserva(),
+                    "La reserva no tiene estado VIGENTE."
+            );
+
+            LocalDateTime ahora = LocalDateTime.now();
+
+            LocalDateTime inicioPermitido =
+                    reserva
+                            .getFechaHoraInicio()
+                            .minusMinutes(ReglasControlOcupacion.MINUTOS_ANTICIPACION);
+
+            assertTrue(
+                    !ahora.isBefore(inicioPermitido)
+                            && ahora.isBefore(reserva.getFechaHoraFin()),
+                    "La reserva no se encuentra dentro del periodo permitido."
+            );
+
+            assertFalse(
+                    validacionIngresoRepository.existsByReservaUsuario(reservaUsuario),
+                    "El estudiante ya posee una validación para esta reserva."
+            );
+
+            precondiciones =
+                    """
+                    Estudiante: %s %s
+                    Código universitario: %s
+                    Ubicación: %s
+                    Ambiente: %s
+                    Reserva vigente: %s
+                    No existe validación aceptada previa
+                    """.formatted(
+                            usuario.getNombres(),
+                            usuario.getApellidos(),
+                            usuario.getCodigoUniversitario(),
+                            reserva.getAmbiente().getUbicacion().getNombre(),
+                            reserva.getAmbiente().getCodigo(),
+                            reserva.getCodigoReserva()
+                    ).trim();
+
+            imprimirPrecondiciones(precondiciones);
+            imprimirInstrucciones(accion,resultadoEsperado);
+
+            ValidacionIngreso validacion =
+                    esperarValidacion(reservaUsuario);
+
+            entityManager.refresh(validacion);
+
+            assertAll(
+                    "Resultado de CP-R3-CU08",
+                    () ->
+                            assertNotNull(
+                                    validacion.getIdValidacion(),
+                                    "No se generó ID de validación."
+                            ),
+                    () ->
+                            assertEquals(
+                                    CODIGO_UNIVERSITARIO,
+                                    validacion
+                                            .getReservaUsuario()
+                                            .getUsuario()
+                                            .getCodigoUniversitario(),
+                                    "El código universitario registrado no corresponde."
+                            ),
+                    () ->
+                            assertEquals(
+                                    CODIGO_RESERVA,
+                                    validacion
+                                            .getReservaUsuario()
+                                            .getReserva()
+                                            .getCodigoReserva(),
+                                    "La reserva registrada no corresponde."
+                            ),
+                    () ->
+                            assertEquals(
+                                    CODIGO_AMBIENTE,
+                                    validacion
+                                            .getReservaUsuario()
+                                            .getReserva()
+                                            .getAmbiente()
+                                            .getCodigo(),
+                                    "El ambiente registrado no corresponde."
+                            ),
+                    () ->
+                            assertEquals(
+                                    NOMBRE_UBICACION,
+                                    validacion
+                                            .getReservaUsuario()
+                                            .getReserva()
+                                            .getAmbiente()
+                                            .getUbicacion()
+                                            .getNombre(),
+                                    "La ubicación registrada no corresponde."
+                            ),
+                    () ->
+                            assertEquals(
+                                    CODIGO_PUNTO,
+                                    validacion
+                                            .getPuntoValidacion()
+                                            .getCodigoPunto(),
+                                    "El punto de validación no corresponde."
+                            ),
+                    () ->
+                            assertEquals(
+                                    MedioValidacion.INGRESO_MANUAL,
+                                    validacion.getMedioValidacion(),
+                                    "El medio de validación no corresponde."
+                            ),
+                    () ->
+                            assertEquals(
+                                    TipoIdentificador.CODIGO_UNIVERSITARIO,
                                     validacion.getTipoIdentificador(),
                                     "El tipo de identificador no corresponde."
                             ),
