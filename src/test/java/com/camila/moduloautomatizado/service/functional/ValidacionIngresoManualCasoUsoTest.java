@@ -17,6 +17,7 @@ import com.camila.moduloautomatizado.repository.ReservaRepository;
 import com.camila.moduloautomatizado.repository.ReservaUsuarioRepository;
 import com.camila.moduloautomatizado.repository.UsuarioRepository;
 import com.camila.moduloautomatizado.repository.ValidacionIngresoRepository;
+import com.camila.moduloautomatizado.repository.UbicacionRepository;
 
 import com.camila.moduloautomatizado.service.ValidacionIngresoService;
 
@@ -45,6 +46,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
@@ -64,6 +67,8 @@ class ValidacionIngresoManualCasoUsoTest {
     private static final String DNI = "10000002";
 
     private static final String DNI_NO_REGISTRADO = "99999999";
+
+    private static final String DNI_SIN_RESERVA = "10000028";
 
     @Autowired
     private ReservaRepository reservaRepository;
@@ -88,6 +93,9 @@ class ValidacionIngresoManualCasoUsoTest {
 
     @MockitoSpyBean
     private ValidacionIngresoService validacionIngresoService;
+
+    @Autowired
+    private UbicacionRepository ubicacionRepository;
 
 
     // CP-R3-CU07
@@ -703,6 +711,136 @@ class ValidacionIngresoManualCasoUsoTest {
 
             throw e;
         }
+    }
+
+    // CP-R3-CU10
+    @Test
+    @DisplayName("CP-R3-CU10 - Usuario sin reserva asociada")
+    void debeRechazarUsuarioSinReservaAsociada() {
+
+        String codigoCaso = "CP-R3-CU10";
+        String accion = "Identificación del DNI " + DNI_SIN_RESERVA
+                + " y búsqueda de una reserva en la ubicación "
+                + NOMBRE_UBICACION + ".";
+        String resultadoEsperado = "Resultado esperado: El módulo determina que no existe una " +
+                "reserva asociada y no registra el ingreso.\n\n" +
+                "Objetivo: Verificar el rechazo cuando el usuario identificado no se encuentra " +
+                "asociado a una reserva.";
+        String precondiciones = "No fue posible verificar las precondiciones.";
+
+        imprimirCabecera(codigoCaso,"Usuario sin reserva asociada");
+
+        try {
+
+            var usuario =
+                    usuarioRepository
+                            .findByDni(DNI_SIN_RESERVA)
+                            .orElseThrow(() ->
+                                    new IllegalStateException(
+                                            "No existe el usuario con DNI "
+                                                    + DNI_SIN_RESERVA + "."
+                                    )
+                            );
+
+            assertTrue(
+                    reservaUsuarioRepository
+                            .findByUsuarioAndActivoTrue(usuario)
+                            .isEmpty(),
+                    "El usuario posee una reserva activa asociada."
+            );
+
+            var ubicacion =
+                    ubicacionRepository
+                            .findByNombre(NOMBRE_UBICACION)
+                            .orElseThrow(() ->
+                                    new IllegalStateException(
+                                            "No existe la ubicación "
+                                                    + NOMBRE_UBICACION + "."
+                                    )
+                            );
+
+            precondiciones =
+                    """
+                    Estudiante: %s %s
+                    DNI: %s
+                    Ubicación seleccionada: %s
+                    No posee una reserva asociada
+                    """.formatted(
+                            usuario.getNombres(),
+                            usuario.getApellidos(),
+                            usuario.getDni(),
+                            ubicacion.getNombre()
+                    ).trim();
+
+            imprimirPrecondiciones(precondiciones);
+
+            long validacionesAntes = validacionIngresoRepository.count();
+
+            imprimirInstrucciones(accion,resultadoEsperado);
+
+            esperarBusquedaReservaSinAsociacion(
+                    DNI_SIN_RESERVA,
+                    ubicacion.getIdUbicacion()
+            );
+
+            entityManager.clear();
+
+            long validacionesDespues = validacionIngresoRepository.count();
+
+            assertEquals(
+                    validacionesAntes,
+                    validacionesDespues,
+                    "Se registró una validación para un usuario sin reserva."
+            );
+
+            String resultadoReal =
+                    """
+                    Usuario identificado.
+                    No se encontró una reserva asociada.
+                    No se registró una nueva validación de ingreso.
+                    """.trim();
+
+            guardarEvidencia(
+                    codigoCaso,
+                    precondiciones,
+                    accion,
+                    resultadoEsperado,
+                    resultadoReal,
+                    "APROBADA"
+            );
+
+            imprimirResultado(codigoCaso,resultadoReal,"APROBADA");
+
+        } catch (AssertionError | RuntimeException e) {
+
+            String resultadoReal = "Prueba no superada: " + obtenerMensajeError(e);
+
+            guardarEvidencia(
+                    codigoCaso,
+                    precondiciones,
+                    accion,
+                    resultadoEsperado,
+                    resultadoReal,
+                    "NO_APROBADA"
+            );
+
+            imprimirResultado(codigoCaso,resultadoReal,"NO_APROBADA");
+
+            throw e;
+        }
+    }
+
+    private void esperarBusquedaReservaSinAsociacion(
+            String dni,
+            Integer idUbicacion) {
+
+        verify(validacionIngresoService,timeout(TIEMPO_MAXIMO_ESPERA_MS))
+                .buscarReservaVigenteParaValidacionManual(
+                        argThat(usuario ->
+                                dni.equals(usuario.getDni())
+                        ),
+                        eq(idUbicacion)
+                );
     }
 
     private void esperarIdentificacionDni(
