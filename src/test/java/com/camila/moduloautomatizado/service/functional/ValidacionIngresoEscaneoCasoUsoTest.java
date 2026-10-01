@@ -905,6 +905,211 @@ class ValidacionIngresoEscaneoCasoUsoTest {
         }
     }
 
+    // CP-R3-CU06
+    @Test
+    @DisplayName("CP-R3-CU06 - Validación aceptada previamente")
+    void debeRechazarValidacionAceptadaPreviamente() {
+
+        String codigoCaso = "CP-R3-CU06";
+        String accion = "Nuevo escaneo del DNI " + DNI + " en el punto " + CODIGO_PUNTO + ".";
+        String resultadoEsperado = "Resultado esperado: El módulo no genera una nueva " +
+                "validación y muestra el resultado correspondiente.\n\n" +
+                "Objetivo: Verificar que un mismo estudiante no pueda registrar más " +
+                "de una validación aceptada para la misma reserva.";
+        String precondiciones = "No fue posible verificar las precondiciones.";
+
+        imprimirCabecera(codigoCaso,"Validación aceptada previamente");
+
+        try {
+
+            var usuario =
+                    usuarioRepository
+                            .findByDni(DNI)
+                            .orElseThrow(() ->
+                                    new IllegalStateException(
+                                            "No existe el usuario con DNI " + DNI + "."
+                                    )
+                            );
+
+            Reserva reserva =
+                    reservaRepository
+                            .findByCodigoReserva(CODIGO_RESERVA)
+                            .orElseThrow(() ->
+                                    new IllegalStateException(
+                                            "No existe la reserva " + CODIGO_RESERVA + "."
+                                    )
+                            );
+
+            assertEquals(
+                    CODIGO_AMBIENTE,
+                    reserva.getAmbiente().getCodigo(),
+                    "La reserva no corresponde al ambiente esperado."
+            );
+
+            ReservaUsuario reservaUsuario =
+                    reservaUsuarioRepository
+                            .findByReservaAndUsuario(reserva,usuario)
+                            .orElseThrow(() ->
+                                    new IllegalStateException(
+                                            "El estudiante no se encuentra asociado a la reserva."
+                                    )
+                            );
+
+            assertTrue(
+                    reservaUsuario.getActivo(),
+                    "La asociación del estudiante con la reserva no está activa."
+            );
+
+            ReservaEstado ultimoEstado =
+                    reservaEstadoRepository
+                            .findTopByReservaOrderByFechaHoraEstadoDesc(reserva)
+                            .orElseThrow(() ->
+                                    new IllegalStateException(
+                                            "La reserva no tiene un estado registrado."
+                                    )
+                            );
+
+            assertEquals(
+                    EstadoReserva.VIGENTE,
+                    ultimoEstado.getEstadoReserva(),
+                    "La reserva no tiene estado VIGENTE."
+            );
+
+            LocalDateTime ahora = LocalDateTime.now();
+
+            LocalDateTime inicioPermitido =
+                    reserva
+                            .getFechaHoraInicio()
+                            .minusMinutes(ReglasControlOcupacion.MINUTOS_ANTICIPACION);
+
+            assertTrue(
+                    !ahora.isBefore(inicioPermitido)
+                            && ahora.isBefore(reserva.getFechaHoraFin()),
+                    "La reserva no se encuentra dentro del periodo permitido."
+            );
+
+            PuntoValidacion puntoValidacion =
+                    puntoValidacionRepository
+                            .findByCodigoPuntoAndActivoTrue(CODIGO_PUNTO)
+                            .orElseThrow(() ->
+                                    new IllegalStateException(
+                                            "No existe un punto activo con código "
+                                                    + CODIGO_PUNTO + "."
+                                    )
+                            );
+
+            assertEquals(
+                    reserva.getAmbiente().getIdAmbiente(),
+                    puntoValidacion.getAmbiente().getIdAmbiente(),
+                    "El punto no corresponde al ambiente de la reserva."
+            );
+
+            ValidacionIngreso validacionPrevia =
+                    buscarValidacionRegistrada(
+                            reservaUsuario.getIdReservaUsuario()
+                    );
+
+            assertNotNull(
+                    validacionPrevia,
+                    "El estudiante no cuenta con una validación aceptada previa. "
+                            + "Debe ejecutarse primero CP-R3-CU01."
+            );
+
+            Integer idValidacionPrevia = validacionPrevia.getIdValidacion();
+
+            LocalDateTime fechaHoraPrevia = validacionPrevia.getFechaHoraValidacion();
+
+            precondiciones =
+                    """
+                    Estudiante: %s %s
+                    Ambiente: %s
+                    Reserva vigente: %s
+                    Validación aceptada previamente: %s
+                    """.formatted(
+                            usuario.getNombres(),
+                            usuario.getApellidos(),
+                            reserva.getAmbiente().getCodigo(),
+                            reserva.getCodigoReserva(),
+                            idValidacionPrevia
+                    ).trim();
+
+            imprimirPrecondiciones(precondiciones);
+
+            long validacionesAntes = validacionIngresoRepository.count();
+
+            imprimirInstrucciones(accion,resultadoEsperado);
+
+            esperarAccionEscaneo(DNI,CODIGO_PUNTO);
+
+            entityManager.clear();
+
+            long validacionesDespues = validacionIngresoRepository.count();
+
+            assertEquals(
+                    validacionesAntes,
+                    validacionesDespues,
+                    "Se generó una nueva validación para una reserva que ya estaba validada."
+            );
+
+            ValidacionIngreso validacionPosterior =
+                    buscarValidacionRegistrada(
+                            reservaUsuario.getIdReservaUsuario()
+                    );
+
+            assertNotNull(
+                    validacionPosterior,
+                    "La validación aceptada previamente ya no se encuentra registrada."
+            );
+
+            assertEquals(
+                    idValidacionPrevia,
+                    validacionPosterior.getIdValidacion(),
+                    "La validación registrada fue reemplazada."
+            );
+
+            assertEquals(
+                    fechaHoraPrevia,
+                    validacionPosterior.getFechaHoraValidacion(),
+                    "La fecha y hora de la validación previa fueron modificadas."
+            );
+
+            String resultadoReal =
+                    """
+                    Validación rechazada.
+                    No se generó una nueva validación de ingreso.
+                    Se conserva la validación aceptada previamente.
+                    """.trim();
+
+            guardarEvidencia(
+                    codigoCaso,
+                    precondiciones,
+                    accion,
+                    resultadoEsperado,
+                    resultadoReal,
+                    "APROBADA"
+            );
+
+            imprimirResultado(codigoCaso,resultadoReal,"APROBADA");
+
+        } catch (AssertionError | RuntimeException e) {
+
+            String resultadoReal = "Prueba no superada: " + obtenerMensajeError(e);
+
+            guardarEvidencia(
+                    codigoCaso,
+                    precondiciones,
+                    accion,
+                    resultadoEsperado,
+                    resultadoReal,
+                    "NO_APROBADA"
+            );
+
+            imprimirResultado(codigoCaso,resultadoReal,"NO_APROBADA");
+
+            throw e;
+        }
+    }
+
     private void esperarAccionEscaneo(
             String dni,
             String codigoPunto) {
