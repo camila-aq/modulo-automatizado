@@ -36,4 +36,17 @@ public interface ReservaRepository
             @Param("finDia")
             LocalDateTime finDia
     );
+
+    @Query("""
+            SELECT r
+            FROM Reserva r
+            JOIN FETCH r.ambiente a
+            WHERE r.fechaHoraInicio <= :momento
+              AND r.fechaHoraFin > :momento
+            ORDER BY r.fechaHoraInicio ASC
+            """)
+    List<Reserva> buscarReservasEnControl(
+            @Param("momento")
+            LocalDateTime momento
+    );
 }
