@@ -60,11 +60,11 @@ public class ReservasIntegracionTestInitializer {
     @Transactional
     public void cargarReservasDeIntegracion() {
 
-        crearBloqueIntegracion01();
-
-        // crearBloqueIntegracion02();
+        // crearBloqueIntegracion01();
+         crearBloqueIntegracion02();
         // crearBloqueIntegracion03();
         // crearBloqueIntegracion04();
+        // crearBloqueIntegracion05();
     }
 
 
@@ -92,6 +92,18 @@ public class ReservasIntegracionTestInitializer {
     }
 
     private void crearBloqueIntegracion02() {
+        crearReservaFueraDeVigencia(
+                "RES-INT-CCSS-EXP-001",
+                "CCSS-AMB-002",
+                List.of(
+                        "10000007",
+                        "10000008",
+                        "10000009"
+                )
+        );
+    }
+
+    private void crearBloqueIntegracion03() {
 
         crearReserva(
                 "RES-INT-CCSS-002",
@@ -114,7 +126,7 @@ public class ReservasIntegracionTestInitializer {
     }
 
 
-    private void crearBloqueIntegracion03() {
+    private void crearBloqueIntegracion04() {
 
         crearReserva(
                 "RES-INT-CCSS-003",
@@ -140,7 +152,7 @@ public class ReservasIntegracionTestInitializer {
     }
 
 
-    private void crearBloqueIntegracion04() {
+    private void crearBloqueIntegracion05() {
 
         crearReserva(
                 "RES-INT-CCSS-004",
@@ -164,7 +176,6 @@ public class ReservasIntegracionTestInitializer {
                 )
         );
     }
-
 
 
     private Reserva crearReserva(
@@ -355,5 +366,52 @@ public class ReservasIntegracionTestInitializer {
                     + "."
             );
         }
+    }
+
+    private Reserva crearReservaFueraDeVigencia(
+            String codigoReserva,
+            String codigoAmbiente,
+            List<String> dnisIntegrantes) {
+
+        LocalDateTime ahora = LocalDateTime.now();
+
+        Ambiente ambiente = obtenerAmbiente(codigoAmbiente);
+
+        validarCantidadIntegrantes(ambiente,dnisIntegrantes.size());
+
+        Usuario administrador = obtenerUsuario("00000001");
+
+        Reserva reserva =
+                reservaRepository
+                        .findByCodigoReserva(codigoReserva)
+                        .orElseGet(() -> {
+                            Reserva nuevaReserva = new Reserva();
+                            nuevaReserva.setCodigoReserva(codigoReserva);
+                            nuevaReserva.setFechaCreacion(ahora);
+                            nuevaReserva.setUsuarioCreacion(administrador);
+                            return nuevaReserva;
+                        });
+
+        reserva.setAmbiente(ambiente);
+
+        LocalDateTime fin = ahora.minusHours(3).withMinute(0).withSecond(0).withNano(0);
+        LocalDateTime inicio = fin.minusHours(2);
+
+        reserva.setFechaHoraInicio(inicio);
+        reserva.setFechaHoraFin(fin);
+        reserva.setToleranciaMinutos(ReglasControlOcupacion.MINUTOS_TOLERANCIA);
+        reserva = reservaRepository.save(reserva);
+
+        for (int i = 0;i < dnisIntegrantes.size();i++) {
+            Usuario estudiante = obtenerUsuario(dnisIntegrantes.get(i));
+
+            RolEnReserva rol = i == 0 ? RolEnReserva.RESPONSABLE : RolEnReserva.INTEGRANTE;
+
+            crearAsociacionReservaUsuario(reserva,estudiante,rol,administrador,ahora);
+        }
+
+        asegurarEstadoVigente(reserva,administrador,ahora);
+
+        return reserva;
     }
 }
