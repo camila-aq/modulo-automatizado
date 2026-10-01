@@ -429,6 +429,7 @@ class ValidacionIngresoEscaneoCasoUsoTest {
 
         System.out.println(
                 """
+                ========================================
                 Resultado real: %s
                 
                 %s - %s
