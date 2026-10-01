@@ -70,6 +70,10 @@ class ValidacionIngresoManualCasoUsoTest {
 
     private static final String DNI_SIN_RESERVA = "10000028";
 
+    private static final String DNI_RESERVA_FUERA_VIGENCIA = "10000007";
+    private static final String CODIGO_RESERVA_FUERA_VIGENCIA = "RES-INT-CCSS-EXP-001";
+    private static final String CODIGO_AMBIENTE_FUERA_VIGENCIA = "CCSS-AMB-002";
+
     @Autowired
     private ReservaRepository reservaRepository;
 
@@ -828,6 +832,191 @@ class ValidacionIngresoManualCasoUsoTest {
 
             throw e;
         }
+    }
+
+    // CP-R3-CU11
+    @Test
+    @DisplayName("CP-R3-CU11 - Reserva fuera de su periodo de vigencia")
+    void debeRechazarReservaFueraDeSuPeriodoDeVigencia() {
+
+        String codigoCaso = "CP-R3-CU11";
+        String accion = "Identificación del DNI " + DNI_RESERVA_FUERA_VIGENCIA
+                + " e intento de localizar su reserva para confirmar el ingreso.";
+        String resultadoEsperado = "Resultado esperado: El módulo rechaza la validación " +
+                "y no registra el ingreso.\n\n" +
+                "Objetivo: Verificar que no pueda confirmarse el ingreso cuando la reserva " +
+                "del usuario se encuentra fuera de su periodo de vigencia.";
+        String precondiciones = "No fue posible verificar las precondiciones.";
+
+        imprimirCabecera(codigoCaso,"Reserva fuera de su periodo de vigencia");
+
+        try {
+
+            var usuario =
+                    usuarioRepository
+                            .findByDni(DNI_RESERVA_FUERA_VIGENCIA)
+                            .orElseThrow(() ->
+                                    new IllegalStateException(
+                                            "No existe el usuario con DNI " + DNI_RESERVA_FUERA_VIGENCIA + "."
+                                    )
+                            );
+
+            Reserva reserva =
+                    reservaRepository
+                            .findByCodigoReserva(CODIGO_RESERVA_FUERA_VIGENCIA)
+                            .orElseThrow(() ->
+                                    new IllegalStateException(
+                                            "No existe la reserva " + CODIGO_RESERVA_FUERA_VIGENCIA + "."
+                                    )
+                            );
+
+            assertEquals(
+                    CODIGO_AMBIENTE_FUERA_VIGENCIA,
+                    reserva.getAmbiente().getCodigo(),
+                    "La reserva no corresponde al ambiente esperado."
+            );
+
+            assertEquals(
+                    NOMBRE_UBICACION,
+                    reserva.getAmbiente().getUbicacion().getNombre(),
+                    "La reserva no corresponde a la ubicación esperada."
+            );
+
+            ReservaUsuario reservaUsuario =
+                    reservaUsuarioRepository
+                            .findByReservaAndUsuario(reserva,usuario)
+                            .orElseThrow(() ->
+                                    new IllegalStateException(
+                                            "El estudiante no se encuentra asociado a la reserva."
+                                    )
+                            );
+
+            assertTrue(
+                    reservaUsuario.getActivo(),
+                    "La asociación del estudiante con la reserva no está activa."
+            );
+
+            ReservaEstado ultimoEstado =
+                    reservaEstadoRepository
+                            .findTopByReservaOrderByFechaHoraEstadoDesc(reserva)
+                            .orElseThrow(() ->
+                                    new IllegalStateException(
+                                            "La reserva no tiene un estado registrado."
+                                    )
+                            );
+
+            assertEquals(
+                    EstadoReserva.VIGENTE,
+                    ultimoEstado.getEstadoReserva(),
+                    "La reserva no tiene estado VIGENTE."
+            );
+
+            LocalDateTime ahora = LocalDateTime.now();
+
+            assertTrue(
+                    !ahora.isBefore(reserva.getFechaHoraFin()),
+                    "La reserva todavía se encuentra dentro de su periodo de vigencia."
+            );
+
+            assertFalse(
+                    validacionIngresoRepository.existsByReservaUsuario(reservaUsuario),
+                    "El estudiante ya posee una validación para esta reserva."
+            );
+
+            var ubicacion =
+                    ubicacionRepository
+                            .findByNombre(NOMBRE_UBICACION)
+                            .orElseThrow(() ->
+                                    new IllegalStateException(
+                                            "No existe la ubicación " + NOMBRE_UBICACION + "."
+                                    )
+                            );
+
+            precondiciones =
+                    """
+                    Estudiante: %s %s
+                    DNI: %s
+                    Ubicación seleccionada: %s
+                    Ambiente: %s
+                    Reserva: %s
+                    Fin de la reserva: %s
+                    Reserva fuera de su periodo de vigencia
+                    """.formatted(
+                            usuario.getNombres(),
+                            usuario.getApellidos(),
+                            usuario.getDni(),
+                            ubicacion.getNombre(),
+                            reserva.getAmbiente().getCodigo(),
+                            reserva.getCodigoReserva(),
+                            reserva.getFechaHoraFin()
+                    ).trim();
+
+            imprimirPrecondiciones(precondiciones);
+
+            long validacionesAntes = validacionIngresoRepository.count();
+
+            imprimirInstrucciones(accion,resultadoEsperado);
+
+            esperarBusquedaReservaFueraVigencia(DNI_RESERVA_FUERA_VIGENCIA,ubicacion.getIdUbicacion());
+
+            entityManager.clear();
+
+            long validacionesDespues = validacionIngresoRepository.count();
+
+            assertEquals(
+                    validacionesAntes,
+                    validacionesDespues,
+                    "Se registró una validación para una reserva fuera de vigencia."
+            );
+
+            String resultadoReal =
+                    """
+                    Usuario identificado.
+                    La reserva se encuentra fuera de su periodo de vigencia.
+                    No se registró una nueva validación de ingreso.
+                    """.trim();
+
+            guardarEvidencia(
+                    codigoCaso,
+                    precondiciones,
+                    accion,
+                    resultadoEsperado,
+                    resultadoReal,
+                    "APROBADA"
+            );
+
+            imprimirResultado(codigoCaso,resultadoReal,"APROBADA");
+
+        } catch (AssertionError | RuntimeException e) {
+
+            String resultadoReal = "Prueba no superada: " + obtenerMensajeError(e);
+
+            guardarEvidencia(
+                    codigoCaso,
+                    precondiciones,
+                    accion,
+                    resultadoEsperado,
+                    resultadoReal,
+                    "NO_APROBADA"
+            );
+
+            imprimirResultado(codigoCaso,resultadoReal,"NO_APROBADA");
+
+            throw e;
+        }
+    }
+
+    private void esperarBusquedaReservaFueraVigencia(
+            String dni,
+            Integer idUbicacion) {
+
+        verify(validacionIngresoService,timeout(TIEMPO_MAXIMO_ESPERA_MS))
+                .buscarReservaVigenteParaValidacionManual(
+                        argThat(usuario ->
+                                dni.equals(usuario.getDni())
+                        ),
+                        eq(idUbicacion)
+                );
     }
 
     private void esperarBusquedaReservaSinAsociacion(
