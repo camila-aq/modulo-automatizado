@@ -58,12 +58,19 @@ class ValidacionIngresoEscaneoCasoUsoTest {
     private static final String DNI = "10000001";
     private static final long TIEMPO_MAXIMO_ESPERA_MS = 300_000;
     private static final long INTERVALO_CONSULTA_MS = 500;
+
     private static final String DNI_NO_REGISTRADO = "99999999";
+
     private static final String DNI_SIN_RESERVA = "10000028";
+
     private static final String DNI_RESERVA_FUERA_VIGENCIA = "10000007";
     private static final String CODIGO_RESERVA_FUERA_VIGENCIA = "RES-INT-CCSS-EXP-001";
     private static final String CODIGO_AMBIENTE_FUERA_VIGENCIA = "CCSS-AMB-002";
     private static final String CODIGO_PUNTO_FUERA_VIGENCIA = "PVAL-CCSS-002";
+
+    private static final String DNI_OTRO_AMBIENTE = "10000004";
+    private static final String CODIGO_RESERVA_OTRO_AMBIENTE = "RES-INT-CIA-001";
+    private static final String CODIGO_AMBIENTE_OTRO_AMBIENTE = "CIA-AMB-001";
 
     @Autowired
     private ReservaRepository reservaRepository;
@@ -716,6 +723,183 @@ class ValidacionIngresoEscaneoCasoUsoTest {
                     resultadoReal,
                     "NO_APROBADA"
             );
+
+            throw e;
+        }
+    }
+
+    // CP-R3-CU05
+    @Test
+    @DisplayName("CP-R3-CU05 - Reserva correspondiente a otro ambiente")
+    void debeRechazarReservaCorrespondienteAOtroAmbiente() {
+
+        String codigoCaso = "CP-R3-CU05";
+        String accion = "Escaneo del DNI " + DNI_OTRO_AMBIENTE + " en el punto " + CODIGO_PUNTO + ".";
+        String resultadoEsperado = "Resultado esperado: El módulo rechaza la validación " +
+                "y no registra el ingreso.\n\n" +
+                "Objetivo: Verificar el rechazo cuando la reserva vigente corresponde " +
+                "a un ambiente distinto al asociado con el punto de validación.";
+        String precondiciones = "No fue posible verificar las precondiciones.";
+
+        imprimirCabecera(codigoCaso,"Reserva correspondiente a otro ambiente");
+
+        try {
+
+            var usuario =
+                    usuarioRepository
+                            .findByDni(DNI_OTRO_AMBIENTE)
+                            .orElseThrow(() ->
+                                    new IllegalStateException(
+                                            "No existe el usuario con DNI "
+                                                    + DNI_OTRO_AMBIENTE + "."
+                                    )
+                            );
+
+            Reserva reserva =
+                    reservaRepository
+                            .findByCodigoReserva(CODIGO_RESERVA_OTRO_AMBIENTE)
+                            .orElseThrow(() ->
+                                    new IllegalStateException(
+                                            "No existe la reserva "
+                                                    + CODIGO_RESERVA_OTRO_AMBIENTE + "."
+                                    )
+                            );
+
+            assertEquals(
+                    CODIGO_AMBIENTE_OTRO_AMBIENTE,
+                    reserva.getAmbiente().getCodigo(),
+                    "La reserva no corresponde al ambiente esperado."
+            );
+
+            ReservaUsuario reservaUsuario =
+                    reservaUsuarioRepository
+                            .findByReservaAndUsuario(reserva,usuario)
+                            .orElseThrow(() ->
+                                    new IllegalStateException(
+                                            "El estudiante no se encuentra asociado a la reserva."
+                                    )
+                            );
+
+            assertTrue(
+                    reservaUsuario.getActivo(),
+                    "La asociación del estudiante con la reserva no está activa."
+            );
+
+            ReservaEstado ultimoEstado =
+                    reservaEstadoRepository
+                            .findTopByReservaOrderByFechaHoraEstadoDesc(reserva)
+                            .orElseThrow(() ->
+                                    new IllegalStateException(
+                                            "La reserva no tiene un estado registrado."
+                                    )
+                            );
+
+            assertEquals(
+                    EstadoReserva.VIGENTE,
+                    ultimoEstado.getEstadoReserva(),
+                    "La reserva no tiene estado VIGENTE."
+            );
+
+            LocalDateTime ahora = LocalDateTime.now();
+
+            LocalDateTime inicioPermitido =
+                    reserva
+                            .getFechaHoraInicio()
+                            .minusMinutes(ReglasControlOcupacion.MINUTOS_ANTICIPACION);
+
+            assertTrue(
+                    !ahora.isBefore(inicioPermitido)
+                            && ahora.isBefore(reserva.getFechaHoraFin()),
+                    "La reserva no se encuentra dentro del periodo permitido."
+            );
+
+            assertFalse(
+                    validacionIngresoRepository.existsByReservaUsuario(reservaUsuario),
+                    "El estudiante ya posee una validación para esta reserva."
+            );
+
+            PuntoValidacion puntoValidacion =
+                    puntoValidacionRepository
+                            .findByCodigoPuntoAndActivoTrue(CODIGO_PUNTO)
+                            .orElseThrow(() ->
+                                    new IllegalStateException(
+                                            "No existe un punto activo con código "
+                                                    + CODIGO_PUNTO + "."
+                                    )
+                            );
+
+            assertFalse(
+                    Objects.equals(
+                            reserva.getAmbiente().getIdAmbiente(),
+                            puntoValidacion.getAmbiente().getIdAmbiente()
+                    ),
+                    "El punto de validación pertenece al mismo ambiente de la reserva."
+            );
+
+            precondiciones =
+                    """
+                    Estudiante: %s %s
+                    Reserva vigente: %s
+                    Ambiente de la reserva: %s
+                    Ambiente del punto de validación: %s
+                    No existe validación aceptada previa
+                    """.formatted(
+                            usuario.getNombres(),
+                            usuario.getApellidos(),
+                            reserva.getCodigoReserva(),
+                            reserva.getAmbiente().getCodigo(),
+                            puntoValidacion.getAmbiente().getCodigo()
+                    ).trim();
+
+            imprimirPrecondiciones(precondiciones);
+
+            long validacionesAntes = validacionIngresoRepository.count();
+
+            imprimirInstrucciones(accion,resultadoEsperado);
+
+            esperarAccionEscaneo(DNI_OTRO_AMBIENTE,CODIGO_PUNTO);
+
+            entityManager.clear();
+
+            long validacionesDespues = validacionIngresoRepository.count();
+
+            assertEquals(
+                    validacionesAntes,
+                    validacionesDespues,
+                    "Se registró una validación desde un punto correspondiente a otro ambiente."
+            );
+
+            String resultadoReal =
+                    """
+                    Validación rechazada.
+                    No se registró una nueva validación de ingreso.
+                    """.trim();
+
+            guardarEvidencia(
+                    codigoCaso,
+                    precondiciones,
+                    accion,
+                    resultadoEsperado,
+                    resultadoReal,
+                    "APROBADA"
+            );
+
+            imprimirResultado(codigoCaso,resultadoReal,"APROBADA");
+
+        } catch (AssertionError | RuntimeException e) {
+
+            String resultadoReal = "Prueba no superada: " + obtenerMensajeError(e);
+
+            guardarEvidencia(
+                    codigoCaso,
+                    precondiciones,
+                    accion,
+                    resultadoEsperado,
+                    resultadoReal,
+                    "NO_APROBADA"
+            );
+
+            imprimirResultado(codigoCaso,resultadoReal,"NO_APROBADA");
 
             throw e;
         }

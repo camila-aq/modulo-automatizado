@@ -60,8 +60,8 @@ public class ReservasIntegracionTestInitializer {
     @Transactional
     public void cargarReservasDeIntegracion() {
 
-        // crearBloqueIntegracion01();
-         crearBloqueIntegracion02();
+        crearBloqueIntegracion01();
+        // crearBloqueIntegracion02();
         // crearBloqueIntegracion03();
         // crearBloqueIntegracion04();
         // crearBloqueIntegracion05();
@@ -394,8 +394,8 @@ public class ReservasIntegracionTestInitializer {
 
         reserva.setAmbiente(ambiente);
 
-        LocalDateTime fin = ahora.minusHours(3).withMinute(0).withSecond(0).withNano(0);
-        LocalDateTime inicio = fin.minusHours(2);
+        LocalDateTime fin = ahora.minusHours(1).withMinute(0).withSecond(0).withNano(0);
+        LocalDateTime inicio = fin.minusHours(1);
 
         reserva.setFechaHoraInicio(inicio);
         reserva.setFechaHoraFin(fin);
