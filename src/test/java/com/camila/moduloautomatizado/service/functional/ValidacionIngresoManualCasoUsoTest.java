@@ -18,6 +18,8 @@ import com.camila.moduloautomatizado.repository.ReservaUsuarioRepository;
 import com.camila.moduloautomatizado.repository.UsuarioRepository;
 import com.camila.moduloautomatizado.repository.ValidacionIngresoRepository;
 
+import com.camila.moduloautomatizado.service.ValidacionIngresoService;
+
 import jakarta.persistence.EntityManager;
 
 import org.junit.jupiter.api.DisplayName;
@@ -25,6 +27,7 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
@@ -39,6 +42,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.verify;
 
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
@@ -56,6 +62,8 @@ class ValidacionIngresoManualCasoUsoTest {
     private static final String CODIGO_UNIVERSITARIO = "EST0000003";
 
     private static final String DNI = "10000002";
+
+    private static final String DNI_NO_REGISTRADO = "99999999";
 
     @Autowired
     private ReservaRepository reservaRepository;
@@ -77,6 +85,9 @@ class ValidacionIngresoManualCasoUsoTest {
 
     @Autowired
     private PlatformTransactionManager transactionManager;
+
+    @MockitoSpyBean
+    private ValidacionIngresoService validacionIngresoService;
 
 
     // CP-R3-CU07
@@ -604,6 +615,101 @@ class ValidacionIngresoManualCasoUsoTest {
 
             throw e;
         }
+    }
+
+    // CP-R3-CU09
+    @Test
+    @DisplayName("CP-R3-CU09 - Identificador no registrado")
+    void debeRechazarIdentificadorNoRegistrado() {
+
+        String codigoCaso = "CP-R3-CU09";
+        String accion = "Ingreso del DNI " + DNI_NO_REGISTRADO
+                + " para identificar al usuario.";
+        String resultadoEsperado = "Resultado esperado: El módulo rechaza la operación " +
+                "y no registra una validación de ingreso.\n\n" +
+                "Objetivo: Verificar el rechazo cuando el identificador ingresado " +
+                "no corresponde a un usuario registrado.";
+        String precondiciones = "No fue posible verificar las precondiciones.";
+
+        imprimirCabecera(codigoCaso,"Identificador no registrado");
+
+        try {
+
+            assertTrue(
+                    usuarioRepository
+                            .findByDni(DNI_NO_REGISTRADO)
+                            .isEmpty(),
+                    "El DNI utilizado pertenece a un usuario registrado."
+            );
+
+            precondiciones =
+                    """
+                    Identificador utilizado: DNI %s
+                    No existe un usuario registrado con el identificador
+                    """.formatted(
+                            DNI_NO_REGISTRADO
+                    ).trim();
+
+            imprimirPrecondiciones(precondiciones);
+
+            long validacionesAntes =
+                    validacionIngresoRepository.count();
+
+            imprimirInstrucciones(accion,resultadoEsperado);
+
+            esperarIdentificacionDni(DNI_NO_REGISTRADO);
+
+            entityManager.clear();
+
+            long validacionesDespues = validacionIngresoRepository.count();
+
+            assertEquals(
+                    validacionesAntes,
+                    validacionesDespues,
+                    "Se registró una validación para un identificador no registrado."
+            );
+
+            String resultadoReal =
+                    """
+                    Identificador rechazado.
+                    No se registró una nueva validación de ingreso.
+                    """.trim();
+
+            guardarEvidencia(
+                    codigoCaso,
+                    precondiciones,
+                    accion,
+                    resultadoEsperado,
+                    resultadoReal,
+                    "APROBADA"
+            );
+
+            imprimirResultado(codigoCaso,resultadoReal,"APROBADA");
+
+        } catch (AssertionError | RuntimeException e) {
+
+            String resultadoReal = "Prueba no superada: " + obtenerMensajeError(e);
+
+            guardarEvidencia(
+                    codigoCaso,
+                    precondiciones,
+                    accion,
+                    resultadoEsperado,
+                    resultadoReal,
+                    "NO_APROBADA"
+            );
+
+            imprimirResultado(codigoCaso,resultadoReal,"NO_APROBADA");
+
+            throw e;
+        }
+    }
+
+    private void esperarIdentificacionDni(
+            String dni) {
+
+        verify(validacionIngresoService,timeout(TIEMPO_MAXIMO_ESPERA_MS))
+                .identificarUsuarioPorDni(dni);
     }
 
     private ValidacionIngreso esperarValidacion(
