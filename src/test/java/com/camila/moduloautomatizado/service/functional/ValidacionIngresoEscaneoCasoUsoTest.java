@@ -59,6 +59,7 @@ class ValidacionIngresoEscaneoCasoUsoTest {
     private static final long TIEMPO_MAXIMO_ESPERA_MS = 300_000;
     private static final long INTERVALO_CONSULTA_MS = 500;
     private static final String DNI_NO_REGISTRADO = "99999999";
+    private static final String DNI_SIN_RESERVA = "10000028";
 
     @Autowired
     private ReservaRepository reservaRepository;
@@ -414,6 +415,120 @@ class ValidacionIngresoEscaneoCasoUsoTest {
 
             imprimirResultado(codigoCaso,resultadoReal,"NO_APROBADA");
 
+            throw e;
+        }
+    }
+
+    // CP-R3-CU03
+    @Test
+    @DisplayName("CP-R3-CU03 - Usuario sin reserva asociada")
+    void debeRechazarUsuarioSinReservaAsociada() {
+
+        String codigoCaso = "CP-R3-CU03";
+        String accion = "Escaneo del DNI " + DNI_SIN_RESERVA + " en el punto " + CODIGO_PUNTO + ".";
+        String resultadoEsperado = "La validación debe ser rechazada y no debe registrarse el ingreso.";
+        String precondiciones = "No fue posible verificar las precondiciones.";
+
+        imprimirCabecera(codigoCaso,"Usuario sin reserva asociada");
+
+        try {
+
+            var usuario =
+                    usuarioRepository
+                            .findByDni( DNI_SIN_RESERVA)
+                            .orElseThrow(() ->
+                                    new IllegalStateException(
+                                            "No existe el usuario con DNI " + DNI_SIN_RESERVA + "."
+                                    )
+                            );
+
+            assertTrue(
+                    reservaUsuarioRepository
+                            .findByUsuarioAndActivoTrue(usuario)
+                            .isEmpty(),
+                    "El usuario utilizado para CP-R3-CU03 sí posee una reserva asociada."
+            );
+
+            PuntoValidacion puntoValidacion =
+                    puntoValidacionRepository
+                            .findByCodigoPuntoAndActivoTrue(CODIGO_PUNTO)
+                            .orElseThrow(() ->
+                                    new IllegalStateException(
+                                            "No existe un punto activo con código " + CODIGO_PUNTO + "."
+                                    )
+                            );
+
+            precondiciones =
+                    """
+                    Estudiante: %s %s
+                    DNI: %s
+                    No tiene reserva asociada
+                    Punto: %s activo
+                    """.formatted(
+                            usuario.getNombres(),
+                            usuario.getApellidos(),
+                            usuario.getDni(),
+                            puntoValidacion.getCodigoPunto()
+                    ).trim();
+
+            imprimirPrecondiciones(precondiciones);
+
+            long validacionesAntes = validacionIngresoRepository.count();
+
+            imprimirInstrucciones(accion,resultadoEsperado);
+
+            esperarAccionEscaneo(DNI_SIN_RESERVA,CODIGO_PUNTO);
+
+            entityManager.clear();
+
+            long validacionesDespues = validacionIngresoRepository.count();
+
+            assertEquals(
+                    validacionesAntes,
+                    validacionesDespues,
+                    "Se registró una validación para un usuario sin reserva asociada."
+            );
+
+            String resultadoReal =
+                    """
+                    Validación rechazada.
+                    No se registró una nueva validación de ingreso.
+                    """.trim();
+
+            guardarEvidencia(
+                    codigoCaso,
+                    precondiciones,
+                    accion,
+                    resultadoEsperado,
+                    resultadoReal,
+                    "APROBADA"
+            );
+
+            imprimirResultado(
+                    codigoCaso,
+                    resultadoReal,
+                    "APROBADA"
+            );
+
+        } catch (AssertionError | RuntimeException e) {
+
+            String resultadoReal = "Prueba no superada: " + obtenerMensajeError(e);
+
+            guardarEvidencia(
+                    codigoCaso,
+                    precondiciones,
+                    accion,
+                    resultadoEsperado,
+                    resultadoReal,
+                    "NO_APROBADA"
+            );
+
+            imprimirResultado(
+                    codigoCaso,
+                    resultadoReal,
+                    "NO_APROBADA"
+            );
+            
             throw e;
         }
     }
