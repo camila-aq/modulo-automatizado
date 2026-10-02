@@ -46,31 +46,38 @@ public class EnvioCorreoService {
     }
 
 
-    public void enviar(
+    public boolean enviar(
             Reserva reserva,
             Usuario destinatario,
             TipoCorreo tipoCorreo) {
 
         if (!envioHabilitado) {
-            return;
+            return false;
         }
-
 
         String correoDestino = obtenerCorreoDestino(destinatario);
 
         SimpleMailMessage mensaje = new SimpleMailMessage();
+
         mensaje.setFrom(correoRemitente);
         mensaje.setTo(correoDestino);
         mensaje.setSubject(construirAsunto(reserva,tipoCorreo));
         mensaje.setText(construirContenido(reserva,tipoCorreo));
 
         try {
+
             javaMailSender.send(mensaje);
+            return true;
+
         } catch (MailException ex) {
 
-            System.err.println("No fue posible enviar el correo de " + tipoCorreo
-                    + " para la reserva " + reserva.getCodigoReserva() + ": " + ex.getMessage()
+            System.err.println(
+                    "No fue posible enviar el correo de "
+                    + tipoCorreo + " para la reserva "
+                    + reserva.getCodigoReserva() + ": " + ex.getMessage()
             );
+
+            return false;
         }
     }
 

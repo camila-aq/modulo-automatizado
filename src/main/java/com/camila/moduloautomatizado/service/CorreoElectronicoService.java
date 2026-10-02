@@ -70,6 +70,12 @@ public class CorreoElectronicoService {
             return Optional.empty();
         }
 
+        boolean correoEnviado = envioCorreoService.enviar(reserva,destinatario,tipoCorreo);
+
+        if (!correoEnviado) {
+            return Optional.empty();
+        }
+
         CorreoElectronico correo = new CorreoElectronico();
         correo.setReserva(reserva);
         correo.setUsuarioDestinatario(destinatario);
@@ -78,8 +84,6 @@ public class CorreoElectronicoService {
         correo.setFechaEnvio(momento);
         correo.setFechaCreacion(momento);
         correo.setUsuarioCreacion(null);
-
-        envioCorreoService.enviar(reserva,destinatario,tipoCorreo);
 
         return Optional.of(correoElectronicoRepository.save(correo));
     }

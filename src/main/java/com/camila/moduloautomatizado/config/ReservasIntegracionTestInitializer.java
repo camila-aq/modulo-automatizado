@@ -259,7 +259,7 @@ public class ReservasIntegracionTestInitializer {
 
         reserva.setFechaHoraInicio(inicio);
         reserva.setFechaHoraFin(fin);
-        reserva.setToleranciaMinutos(5);
+        reserva.setToleranciaMinutos(ReglasControlOcupacion.MINUTOS_TOLERANCIA);
 
         reserva = reservaRepository.save(reserva);
 
