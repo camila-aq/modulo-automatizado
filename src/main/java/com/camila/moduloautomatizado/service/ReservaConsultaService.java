@@ -101,6 +101,9 @@ public class ReservaConsultaService {
                 .filter(
                         this::reservaVigente
                 )
+                .filter(
+                        this::reservaVisibleEnGrilla
+                )
                 .map(
                         this::convertirRespuesta
                 )
@@ -120,6 +123,28 @@ public class ReservaConsultaService {
                                 == EstadoReserva.VIGENTE
                 )
                 .orElse(false);
+    }
+
+    private boolean reservaVisibleEnGrilla(
+            Reserva reserva) {
+
+        return controlOcupacionRepository
+                .findByReserva(reserva)
+                .flatMap(controlOcupacion ->
+                        ocupacionEstadoRepository
+                                .findTopByControlOcupacionAndFechaHoraInicioPeriodoAndFechaHoraFinPeriodoOrderByFechaHoraEstadoDesc(
+                                        controlOcupacion,
+                                        reserva.getFechaHoraInicio(),
+                                        reserva.getFechaHoraFin()
+                                )
+                )
+                .map(estado ->
+                        estado.getEstadoOcupacion()
+                                != EstadoOcupacion.LIBERADO
+                )
+                .orElse(
+                        true
+                );
     }
 
 

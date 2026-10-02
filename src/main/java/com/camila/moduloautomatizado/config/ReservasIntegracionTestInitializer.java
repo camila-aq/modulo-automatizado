@@ -62,9 +62,9 @@ public class ReservasIntegracionTestInitializer {
 
         // crearBloqueIntegracion01();
         // crearBloqueIntegracion02();
-         crearBloqueIntegracion03();
+        // crearBloqueIntegracion03();
         // crearBloqueIntegracion04();
-        // crearBloqueIntegracion05();
+         crearBloqueIntegracion05();
     }
 
 
@@ -120,7 +120,8 @@ public class ReservasIntegracionTestInitializer {
                 List.of(
                         "10000009",
                         "10000010",
-                        "10000011"
+                        "10000011",
+                        "10000012"
                 )
         );
     }
@@ -132,10 +133,10 @@ public class ReservasIntegracionTestInitializer {
                 "RES-INT-CCSS-003",
                 "CCSS-AMB-003",
                 List.of(
-                        "10000012",
                         "10000013",
                         "10000014",
-                        "10000015"
+                        "10000015",
+                        "10000016"
                 )
         );
 
@@ -143,10 +144,10 @@ public class ReservasIntegracionTestInitializer {
                 "RES-INT-CIA-003",
                 "CIA-AMB-030",
                 List.of(
-                        "10000016",
                         "10000017",
                         "10000018",
-                        "10000019"
+                        "10000019",
+                        "10000020"
                 )
         );
     }
@@ -212,7 +213,7 @@ public class ReservasIntegracionTestInitializer {
 
         reserva.setFechaHoraInicio(inicio);
         reserva.setFechaHoraFin(fin);
-        reserva.setToleranciaMinutos(ReglasControlOcupacion.MINUTOS_TOLERANCIA);
+        reserva.setToleranciaMinutos(45);
 
         reserva = reservaRepository.save(reserva);
 
