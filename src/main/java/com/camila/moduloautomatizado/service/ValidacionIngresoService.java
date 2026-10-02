@@ -16,6 +16,7 @@ import com.camila.moduloautomatizado.model.enums.TipoIdentificador;
 import com.camila.moduloautomatizado.model.rule.ReglasControlOcupacion;
 import com.camila.moduloautomatizado.dto.DetalleReservaManualResponse;
 import com.camila.moduloautomatizado.dto.IntegranteReservaResponse;
+import com.camila.moduloautomatizado.event.ValidacionIngresoRegistradaEvent;
 
 import java.time.LocalDateTime;
 
@@ -23,6 +24,7 @@ import java.util.Objects;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.context.ApplicationEventPublisher;
 
 @Service
 public class ValidacionIngresoService {
@@ -32,19 +34,21 @@ public class ValidacionIngresoService {
     private final ReservaEstadoRepository reservaEstadoRepository;
     private final PuntoValidacionRepository puntoValidacionRepository;
     private final ValidacionIngresoRepository validacionIngresoRepository;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     public ValidacionIngresoService(
             UsuarioRepository usuarioRepository,
             ReservaUsuarioRepository reservaUsuarioRepository,
             ReservaEstadoRepository reservaEstadoRepository,
             PuntoValidacionRepository puntoValidacionRepository,
-            ValidacionIngresoRepository validacionIngresoRepository) {
+            ValidacionIngresoRepository validacionIngresoRepository, ApplicationEventPublisher applicationEventPublisher) {
 
         this.usuarioRepository = usuarioRepository;
         this.reservaUsuarioRepository = reservaUsuarioRepository;
         this.reservaEstadoRepository = reservaEstadoRepository;
         this.puntoValidacionRepository = puntoValidacionRepository;
         this.validacionIngresoRepository = validacionIngresoRepository;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     @Transactional
@@ -99,7 +103,19 @@ public class ValidacionIngresoService {
         validacionIngreso.setFechaHoraValidacion(momento);
         validacionIngreso.setFechaCreacion(momento);
 
-        return validacionIngresoRepository.save(validacionIngreso);
+        ValidacionIngreso validacionGuardada =
+                validacionIngresoRepository.save(
+                        validacionIngreso
+                );
+
+        applicationEventPublisher.publishEvent(
+                new ValidacionIngresoRegistradaEvent(
+                        reservaUsuarioValida.getReserva().getIdReserva(),
+                        momento
+                )
+        );
+
+        return validacionGuardada;
     }
 
     @Transactional(readOnly = true)
@@ -121,10 +137,7 @@ public class ValidacionIngresoService {
 
         return asociaciones.stream()
                 .filter(reservaUsuario ->
-                        reservaEstaVigente(
-                                reservaUsuario,
-                                momento
-                        )
+                        reservaEstaVigente(reservaUsuario,momento)
                 )
                 .findFirst()
                 .orElseThrow(() ->
@@ -147,9 +160,7 @@ public class ValidacionIngresoService {
 
         List<ReservaUsuario> asociaciones =
                 reservaUsuarioRepository
-                        .findByUsuarioAndActivoTrue(
-                                usuario
-                        );
+                        .findByUsuarioAndActivoTrue(usuario);
 
         if (asociaciones.isEmpty()) {
             throw new IllegalArgumentException(
@@ -162,16 +173,10 @@ public class ValidacionIngresoService {
 
         return asociaciones.stream()
                 .filter(reservaUsuario ->
-                        reservaEstaVigente(
-                                reservaUsuario,
-                                momento
-                        )
+                        reservaEstaVigente(reservaUsuario,momento)
                 )
                 .filter(reservaUsuario ->
-                        reservaCorrespondeAUbicacion(
-                                reservaUsuario,
-                                idUbicacion
-                        )
+                        reservaCorrespondeAUbicacion(reservaUsuario,idUbicacion)
                 )
                 .findFirst()
                 .orElseThrow(() ->
@@ -187,9 +192,7 @@ public class ValidacionIngresoService {
 
         ReservaUsuario reservaUsuarioGestionado =
                 reservaUsuarioRepository
-                        .findById(
-                                reservaUsuarioBuscado.getIdReservaUsuario()
-                        )
+                        .findById(reservaUsuarioBuscado.getIdReservaUsuario())
                         .orElseThrow(() ->
                                 new IllegalArgumentException(
                                         "No se encontró la asociación del usuario con la reserva."
@@ -201,22 +204,17 @@ public class ValidacionIngresoService {
 
         List<ReservaUsuario> integrantes =
                 reservaUsuarioRepository
-                        .findByReservaAndActivoTrueOrderByIdReservaUsuarioAsc(
-                                reserva
-                        );
+                        .findByReservaAndActivoTrueOrderByIdReservaUsuarioAsc(reserva);
 
         List<IntegranteReservaResponse> integrantesResponse =
                 integrantes.stream()
                         .map(reservaUsuario -> {
 
-                            Usuario usuario =
-                                    reservaUsuario.getUsuario();
+                            Usuario usuario = reservaUsuario.getUsuario();
 
                             boolean validado =
                                     validacionIngresoRepository
-                                            .existsByReservaUsuario(
-                                                    reservaUsuario
-                                            );
+                                            .existsByReservaUsuario(reservaUsuario);
 
                             return new IntegranteReservaResponse(
                                     reservaUsuario.getIdReservaUsuario(),
@@ -233,16 +231,11 @@ public class ValidacionIngresoService {
         return new DetalleReservaManualResponse(
                 reservaUsuarioGestionado.getIdReservaUsuario(),
                 reserva.getIdReserva(),
-                reserva.getAmbiente()
-                        .getUbicacion()
-                        .getIdUbicacion(),
-                reserva.getAmbiente()
-                        .getIdAmbiente(),
+                reserva.getAmbiente().getUbicacion().getIdUbicacion(),
+                reserva.getAmbiente().getIdAmbiente(),
                 reserva.getCodigoReserva(),
-                reserva.getAmbiente()
-                        .getCodigo(),
-                reserva.getAmbiente()
-                        .getNombre(),
+                reserva.getAmbiente().getCodigo(),
+                reserva.getAmbiente().getNombre(),
                 reserva.getFechaHoraInicio(),
                 reserva.getFechaHoraFin(),
                 reserva.getFechaCreacion(),
@@ -305,38 +298,21 @@ public class ValidacionIngresoService {
 
         ReservaUsuario reservaUsuario =
                 reservaUsuarioRepository
-                        .findById(
-                                idReservaUsuario
-                        )
+                        .findById(idReservaUsuario)
                         .orElseThrow(() ->
                                 new IllegalArgumentException(
                                         "No se encontró la asociación del usuario con la reserva."
                                 )
                         );
 
-        /*
-         * La reserva debe pertenecer al edificio
-         * desde el que se está realizando la validación.
-         */
-        if (!reservaCorrespondeAUbicacion(
-                reservaUsuario,
-                idUbicacion
-        )) {
+        if (!reservaCorrespondeAUbicacion(reservaUsuario,idUbicacion)) {
 
             throw new IllegalArgumentException(
                     "La reserva no corresponde a la ubicación seleccionada."
             );
         }
 
-        /*
-         * Se reutiliza la lógica existente:
-         * vigencia, duplicidad y obtención
-         * automática del punto de validación.
-         */
-        return confirmarValidacionManual(
-                reservaUsuario,
-                tipoIdentificador
-        );
+        return confirmarValidacionManual(reservaUsuario,tipoIdentificador);
     }
 
     @Transactional
@@ -346,38 +322,21 @@ public class ValidacionIngresoService {
 
         LocalDateTime momento = LocalDateTime.now();
 
-        /*
-         * Se vuelve a comprobar la vigencia al confirmar.
-         * La reserva pudo haber terminado o cambiado de estado
-         * después de haber sido localizada.
-         */
         if (!reservaEstaVigente(reservaUsuario, momento)) {
             throw new IllegalArgumentException(
                     "El usuario no se encuentra asociado a una reserva vigente."
             );
         }
 
-        /*
-         * Evita registrar más de una validación aceptada
-         * para el mismo integrante de la misma reserva.
-         */
         if (validacionIngresoRepository.existsByReservaUsuario(reservaUsuario)) {
             throw new IllegalArgumentException(
                     "El usuario ya cuenta con una validación aceptada para esta reserva."
             );
         }
 
-        /*
-         * En el flujo manual el administrador no selecciona
-         * un punto de validación. El sistema obtiene automáticamente
-         * el punto activo correspondiente al ambiente reservado.
-         */
         PuntoValidacion puntoValidacion =
                 puntoValidacionRepository
-                        .findByAmbienteAndActivoTrue(
-                                reservaUsuario
-                                        .getReserva()
-                                        .getAmbiente()
+                        .findByAmbienteAndActivoTrue(reservaUsuario.getReserva().getAmbiente()
                         )
                         .orElseThrow(() ->
                                 new IllegalArgumentException(
@@ -385,72 +344,47 @@ public class ValidacionIngresoService {
                                 )
                         );
 
-        ValidacionIngreso validacionIngreso =
-                new ValidacionIngreso();
+        ValidacionIngreso validacionIngreso = new ValidacionIngreso();
+        validacionIngreso.setPuntoValidacion(puntoValidacion);
+        validacionIngreso.setReservaUsuario(reservaUsuario);
+        validacionIngreso.setMedioValidacion(MedioValidacion.INGRESO_MANUAL);
+        validacionIngreso.setTipoIdentificador(tipoIdentificador);
+        validacionIngreso.setFechaHoraValidacion(momento);
+        validacionIngreso.setFechaCreacion(momento);
 
-        validacionIngreso.setPuntoValidacion(
-                puntoValidacion
+        ValidacionIngreso validacionGuardada = validacionIngresoRepository.save(validacionIngreso);
+
+        applicationEventPublisher.publishEvent(
+                new ValidacionIngresoRegistradaEvent(
+                        reservaUsuario.getReserva().getIdReserva(),
+                        momento
+                )
         );
 
-        validacionIngreso.setReservaUsuario(
-                reservaUsuario
-        );
-
-        validacionIngreso.setMedioValidacion(
-                MedioValidacion.INGRESO_MANUAL
-        );
-
-        validacionIngreso.setTipoIdentificador(
-                tipoIdentificador
-        );
-
-        validacionIngreso.setFechaHoraValidacion(
-                momento
-        );
-
-        validacionIngreso.setFechaCreacion(
-                momento
-        );
-
-        return validacionIngresoRepository.save(
-                validacionIngreso
-        );
+        return validacionGuardada;
     }
 
     private boolean reservaEstaVigente(
             ReservaUsuario reservaUsuario,
             LocalDateTime momento) {
 
-        Reserva reserva =
-                reservaUsuario.getReserva();
+        Reserva reserva = reservaUsuario.getReserva();
 
         LocalDateTime inicioValidacion =
                 reserva.getFechaHoraInicio()
-                        .minusMinutes(
-                                ReglasControlOcupacion
-                                        .MINUTOS_ANTICIPACION
-                        );
+                        .minusMinutes(ReglasControlOcupacion.MINUTOS_ANTICIPACION);
 
         boolean dentroDelHorario =
-                !momento.isBefore(
-                        inicioValidacion
-                )
-                        &&
-                        momento.isBefore(
-                                reserva.getFechaHoraFin()
-                        );
+                !momento.isBefore(inicioValidacion) && momento.isBefore(reserva.getFechaHoraFin());
 
         if (!dentroDelHorario) {
             return false;
         }
 
         return reservaEstadoRepository
-                .findTopByReservaOrderByFechaHoraEstadoDesc(
-                        reserva
-                )
+                .findTopByReservaOrderByFechaHoraEstadoDesc(reserva)
                 .map(estado ->
-                        estado.getEstadoReserva()
-                                == EstadoReserva.VIGENTE
+                        estado.getEstadoReserva() == EstadoReserva.VIGENTE
                 )
                 .orElse(false);
     }
@@ -460,11 +394,7 @@ public class ValidacionIngresoService {
             Integer idUbicacion) {
 
         return Objects.equals(
-                reservaUsuario
-                        .getReserva()
-                        .getAmbiente()
-                        .getUbicacion()
-                        .getIdUbicacion(),
+                reservaUsuario.getReserva().getAmbiente().getUbicacion().getIdUbicacion(),
                 idUbicacion
         );
     }

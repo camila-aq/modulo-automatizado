@@ -16,12 +16,17 @@ public interface ValidacionIngresoRepository
     );
 
     @Query("""
-            SELECT COUNT(DISTINCT v.reservaUsuario.usuario.idUsuario)
-            FROM ValidacionIngreso v
-            WHERE v.reservaUsuario.reserva = :reserva
-            """)
+        SELECT COUNT(DISTINCT v.reservaUsuario.usuario.idUsuario)
+        FROM ValidacionIngreso v
+        WHERE v.reservaUsuario.reserva = :reserva
+          AND v.medioValidacion <>
+              com.camila.moduloautomatizado.model.enums.MedioValidacion.OCUPACION_MANUAL
+        """)
     long contarUsuariosValidadosPorReserva(
             @Param("reserva")
             Reserva reserva
     );
+
+
+
 }
