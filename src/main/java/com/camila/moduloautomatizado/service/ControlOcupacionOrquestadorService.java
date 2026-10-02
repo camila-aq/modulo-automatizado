@@ -11,6 +11,8 @@ import com.camila.moduloautomatizado.model.enums.TipoCorreo;
 
 import com.camila.moduloautomatizado.repository.ReservaUsuarioRepository;
 
+import org.springframework.transaction.annotation.Transactional;
+
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -36,7 +38,7 @@ public class ControlOcupacionOrquestadorService {
         this.reservaUsuarioRepository = reservaUsuarioRepository;
     }
 
-
+    @Transactional
     public Optional<OcupacionEstado> procesarReserva(
             Reserva reserva,
             LocalDateTime momento) {
