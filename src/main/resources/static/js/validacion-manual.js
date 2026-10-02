@@ -1146,7 +1146,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
         for (
-            let hora = 8;
+            let hora = 1;
             hora <= 23;
             hora++
         ) {
@@ -1422,7 +1422,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
         for (
-            let hora = 8;
+            let hora = 1;
             hora <= 23;
             hora++
         ) {

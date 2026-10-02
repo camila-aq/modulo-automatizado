@@ -16,12 +16,16 @@ import java.util.Optional;
 public class CorreoElectronicoService {
 
     private final CorreoElectronicoRepository correoElectronicoRepository;
+    private final EnvioCorreoService envioCorreoService;
 
     public CorreoElectronicoService(
-            CorreoElectronicoRepository correoElectronicoRepository) {
+            CorreoElectronicoRepository correoElectronicoRepository,
+            EnvioCorreoService envioCorreoService) {
 
         this.correoElectronicoRepository = correoElectronicoRepository;
+        this.envioCorreoService = envioCorreoService;
     }
+
 
     @Transactional
     public Optional<CorreoElectronico> registrarSiNoExiste(
@@ -75,7 +79,8 @@ public class CorreoElectronicoService {
         correo.setFechaCreacion(momento);
         correo.setUsuarioCreacion(null);
 
-        return Optional.of(correoElectronicoRepository.save(correo)
-        );
+        envioCorreoService.enviar(reserva,destinatario,tipoCorreo);
+
+        return Optional.of(correoElectronicoRepository.save(correo));
     }
 }

@@ -66,6 +66,7 @@ public class ReservasIntegracionTestInitializer {
         // crearBloqueIntegracion04();
         // crearBloqueIntegracion05();
         // crearBloqueIntegracion06();
+        crearBloqueIntegracion07();
     }
 
 
@@ -192,6 +193,29 @@ public class ReservasIntegracionTestInitializer {
         crearReserva(
                 "RES-INT-CIA-005",
                 "CIA-AMB-012",
+                List.of(
+                        "10000001",
+                        "10000002",
+                        "10000003"
+                )
+        );
+    }
+
+    private void crearBloqueIntegracion07() {
+
+        crearReserva(
+                "RES-INT-CCSS-006",
+                "CCSS-AMB-006",
+                List.of(
+                        "10000028",
+                        "10000029",
+                        "10000030"
+                )
+        );
+
+        crearReserva(
+                "RES-INT-CIA-006",
+                "CIA-AMB-013",
                 List.of(
                         "10000001",
                         "10000002",
