@@ -64,7 +64,8 @@ public class ReservasIntegracionTestInitializer {
         // crearBloqueIntegracion02();
         // crearBloqueIntegracion03();
         // crearBloqueIntegracion04();
-         crearBloqueIntegracion05();
+        // crearBloqueIntegracion05();
+        // crearBloqueIntegracion06();
     }
 
 
@@ -126,7 +127,6 @@ public class ReservasIntegracionTestInitializer {
         );
     }
 
-
     private void crearBloqueIntegracion04() {
 
         crearReserva(
@@ -152,7 +152,6 @@ public class ReservasIntegracionTestInitializer {
         );
     }
 
-
     private void crearBloqueIntegracion05() {
 
         crearReserva(
@@ -174,6 +173,29 @@ public class ReservasIntegracionTestInitializer {
                         "10000025",
                         "10000026",
                         "10000027"
+                )
+        );
+    }
+
+    private void crearBloqueIntegracion06() {
+
+        crearReserva(
+                "RES-INT-CCSS-005",
+                "CCSS-AMB-005",
+                List.of(
+                        "10000028",
+                        "10000029",
+                        "10000030"
+                )
+        );
+
+        crearReserva(
+                "RES-INT-CIA-005",
+                "CIA-AMB-012",
+                List.of(
+                        "10000001",
+                        "10000002",
+                        "10000003"
                 )
         );
     }
@@ -213,7 +235,7 @@ public class ReservasIntegracionTestInitializer {
 
         reserva.setFechaHoraInicio(inicio);
         reserva.setFechaHoraFin(fin);
-        reserva.setToleranciaMinutos(45);
+        reserva.setToleranciaMinutos(5);
 
         reserva = reservaRepository.save(reserva);
 

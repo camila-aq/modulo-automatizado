@@ -95,7 +95,7 @@ public class ControlOcupacionService {
                             reserva,
                             EstadoOcupacion.PENDIENTE,
                             "Inicio del control automático de ocupación",
-                            reserva.getFechaHoraInicio(),
+                            controlOcupacion.getFechaHoraInicioControl(),
                             momento
                     );
 
@@ -170,9 +170,16 @@ public class ControlOcupacionService {
 
                     ControlOcupacion control = new ControlOcupacion();
                     control.setReserva(reserva);
-                    control.setFechaHoraInicioControl(reserva.getFechaHoraInicio());
+
+                    LocalDateTime inicioControl = reserva.getFechaHoraInicio();
+                    if (reserva.getFechaCreacion() != null
+                            && reserva.getFechaCreacion().isAfter(inicioControl)) {
+                        inicioControl =  reserva.getFechaCreacion();
+                    }
+
+                    control.setFechaHoraInicioControl(inicioControl);
                     control.setFechaHoraLimiteTolerancia(
-                            reserva.getFechaHoraInicio().plusMinutes(reserva.getToleranciaMinutos())
+                            inicioControl.plusMinutes(reserva.getToleranciaMinutos())
                     );
                     control.setFechaCreacion(momento);
                     control.setUsuarioCreacion(null);

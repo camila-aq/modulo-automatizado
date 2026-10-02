@@ -82,9 +82,15 @@ document.addEventListener("DOMContentLoaded", () => {
     let ambientesCargados = [];
     let reservasCargadas = [];
     let temporizadorIdentificacion;
+    let actualizandoGrillaAutomaticamente = false;
 
 
     inicializarGrillaReservas();
+
+    setInterval(
+        refrescarGrillaAutomaticamente,
+        1000
+    );
 
 
     campoDni.addEventListener(
@@ -834,6 +840,150 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    function obtenerFirmaReservas(
+        reservas
+    ) {
+
+        return JSON.stringify(
+            reservas
+                .map(
+                    reserva => ({
+                        idReserva:
+                        reserva.idReserva,
+
+                        idAmbiente:
+                        reserva.idAmbiente,
+
+                        fechaHoraInicio:
+                        reserva.fechaHoraInicio,
+
+                        fechaHoraFin:
+                        reserva.fechaHoraFin,
+
+                        periodosOcupados:
+                        reserva.periodosOcupados
+                    })
+                )
+                .sort(
+                    (a, b) =>
+                        a.idReserva - b.idReserva
+                )
+        );
+    }
+
+    async function refrescarGrillaAutomaticamente() {
+
+        if (actualizandoGrillaAutomaticamente || ambientesCargados.length === 0) {
+            return;
+        }
+
+        const idUbicacion = ubicacionReserva.value;
+        const fecha = fechaReserva.value;
+
+        if (!idUbicacion || !fecha) {
+            return;
+        }
+
+        const encabezadoActivo =
+            encabezadoGrillaReservas
+                .querySelector(
+                    ".encabezado-ambiente-activo"
+                );
+
+        const idAmbienteSeleccionado =
+            encabezadoActivo
+                ? Number(encabezadoActivo.dataset.idAmbiente)
+                : null;
+
+        const filaReservaActiva =
+            cuerpoDetalleAmbienteGeneral
+                .querySelector(
+                    "tr.reserva-resaltada[data-id-reserva]"
+                );
+
+        const idReservaExpandida =
+            filaReservaActiva
+                ? Number(filaReservaActiva.dataset.idReserva)
+                : null;
+
+        actualizandoGrillaAutomaticamente = true;
+
+        try {
+
+            const respuesta =
+                await fetch(
+                    `/api/reservas?idUbicacion=${idUbicacion}&fecha=${fecha}`
+                );
+
+            if (!respuesta.ok) {
+                return;
+            }
+
+            const reservas = await respuesta.json();
+
+            const firmaAnterior = obtenerFirmaReservas(reservasCargadas);
+
+            const firmaNueva = obtenerFirmaReservas(reservas);
+
+            if (firmaAnterior === firmaNueva) {
+                return;
+            }
+
+            reservasCargadas = reservas;
+
+            construirGrilla(ambientesCargados,reservasCargadas);
+
+            if (idAmbienteSeleccionado === null) {
+                return;
+            }
+
+            const ambienteSeleccionado =
+                ambientesCargados.find(
+                    ambiente =>
+                        ambiente.idAmbiente === idAmbienteSeleccionado
+                );
+
+            if (!ambienteSeleccionado) {
+                return;
+            }
+
+            mostrarDetalleAmbienteGeneral(ambienteSeleccionado,ambientesCargados);
+
+            if (idReservaExpandida === null) {
+                return;
+            }
+
+            const reservaSigueVisible =
+                reservasCargadas.some(
+                    reserva =>
+                        reserva.idReserva === idReservaExpandida
+                );
+
+            if (!reservaSigueVisible) {
+                return;
+            }
+
+            const filaReserva =
+                cuerpoDetalleAmbienteGeneral
+                    .querySelector(
+                        `tr[data-id-reserva="${idReservaExpandida}"]`
+                    );
+
+            if (filaReserva) {
+                await mostrarIntegrantesReservaGrilla(idReservaExpandida,filaReserva);
+            }
+
+        } catch (error) {
+
+            console.error(
+                "No fue posible actualizar automáticamente la grilla.",
+                error
+            );
+
+        } finally {
+            actualizandoGrillaAutomaticamente = false;
+        }
+    }
 
     async function cargarGrillaCatalogo() {
 
@@ -997,7 +1147,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         for (
             let hora = 8;
-            hora <= 22;
+            hora <= 23;
             hora++
         ) {
 
@@ -1273,7 +1423,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         for (
             let hora = 8;
-            hora <= 22;
+            hora <= 23;
             hora++
         ) {
 

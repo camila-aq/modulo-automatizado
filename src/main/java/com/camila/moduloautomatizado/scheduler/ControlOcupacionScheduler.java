@@ -29,8 +29,8 @@ public class ControlOcupacionScheduler {
     }
 
     @Scheduled(
-            fixedDelay = 60000,
-            initialDelay = 10000
+            fixedDelay = 1000,
+            initialDelay = 1000
     )
     public void evaluarReservasEnControl() {
 
