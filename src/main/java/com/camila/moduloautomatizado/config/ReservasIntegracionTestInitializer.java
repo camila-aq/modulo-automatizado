@@ -66,7 +66,8 @@ public class ReservasIntegracionTestInitializer {
         // crearBloqueIntegracion04();
         // crearBloqueIntegracion05();
         // crearBloqueIntegracion06();
-        crearBloqueIntegracion07();
+        // crearBloqueIntegracion07();
+        crearBloqueIntegracion08();
     }
 
 
@@ -224,6 +225,212 @@ public class ReservasIntegracionTestInitializer {
         );
     }
 
+    private void crearBloqueIntegracion08() {
+
+        LocalDateTime ahora = LocalDateTime.now();
+
+        LocalDateTime inicioBase =
+                ahora
+                        .withMinute(0)
+                        .withSecond(0)
+                        .withNano(0);
+
+
+        if (ahora.getMinute() >= 30) {
+            inicioBase = inicioBase.plusHours(1);
+        }
+
+
+        /*
+         * HORA 1
+         *
+         * RES-R5-PEND-001:
+         * Validar primero menos del mínimo para observar
+         * PENDIENTE y luego completar el mínimo para OCUPADO.
+         *
+         * RES-R5-LIB-001:
+         * No completar el mínimo y esperar la liberación.
+         */
+        crearReservaProgramada(
+                "RES-R5-PEND-001",
+                "CCSS-AMB-008",
+                List.of(
+                        "10000001",
+                        "10000002",
+                        "10000003"
+                ),
+                inicioBase
+        );
+
+        crearReservaProgramada(
+                "RES-R5-LIB-001",
+                "CIA-AMB-014",
+                List.of(
+                        "10000004",
+                        "10000005",
+                        "10000006"
+                ),
+                inicioBase
+        );
+
+
+        /*
+         * HORA 2
+         *
+         * Segundo conjunto para continuar las pruebas
+         * o repetir algún escenario si fuera necesario.
+         */
+        crearReservaProgramada(
+                "RES-R5-PEND-002",
+                "CCSS-AMB-009",
+                List.of(
+                        "10000007",
+                        "10000008",
+                        "10000009"
+                ),
+                inicioBase.plusHours(1)
+        );
+
+        crearReservaProgramada(
+                "RES-R5-LIB-002",
+                "CIA-AMB-015",
+                List.of(
+                        "10000010",
+                        "10000011",
+                        "10000012"
+                ),
+                inicioBase.plusHours(1)
+        );
+
+
+        /*
+         * HORA 3
+         *
+         * Tercer conjunto de respaldo para completar
+         * hasta tres horas de pruebas continuas.
+         */
+        crearReservaProgramada(
+                "RES-R5-PEND-003",
+                "CCSS-AMB-010",
+                List.of(
+                        "10000013",
+                        "10000014",
+                        "10000015"
+                ),
+                inicioBase.plusHours(2)
+        );
+
+        crearReservaProgramada(
+                "RES-R5-LIB-003",
+                "CIA-AMB-016",
+                List.of(
+                        "10000016",
+                        "10000017",
+                        "10000018"
+                ),
+                inicioBase.plusHours(2)
+        );
+    }
+
+    private Reserva crearReservaProgramada(
+            String codigoReserva,
+            String codigoAmbiente,
+            List<String> dnisIntegrantes,
+            LocalDateTime inicio) {
+
+        LocalDateTime ahora = LocalDateTime.now();
+
+        Ambiente ambiente =
+                obtenerAmbiente(codigoAmbiente);
+
+        validarCantidadIntegrantes(
+                ambiente,
+                dnisIntegrantes.size()
+        );
+
+        Usuario administrador =
+                obtenerUsuario("00000001");
+
+        Reserva reserva =
+                reservaRepository
+                        .findByCodigoReserva(codigoReserva)
+                        .orElseGet(() -> {
+
+                            Reserva nuevaReserva =
+                                    new Reserva();
+
+                            nuevaReserva.setCodigoReserva(codigoReserva);
+                            nuevaReserva.setFechaCreacion(ahora);
+                            nuevaReserva.setUsuarioCreacion(administrador);
+
+                            return nuevaReserva;
+                        });
+
+        reserva.setAmbiente(ambiente);
+
+        LocalDateTime fin =
+                inicio.plusHours(1);
+
+        reserva.setFechaHoraInicio(inicio);
+        reserva.setFechaHoraFin(fin);
+        reserva.setToleranciaMinutos(
+                ReglasControlOcupacion.MINUTOS_TOLERANCIA
+        );
+
+        reserva =
+                reservaRepository.save(reserva);
+
+        for (int i = 0; i < dnisIntegrantes.size(); i++) {
+
+            Usuario estudiante =
+                    obtenerUsuario(
+                            dnisIntegrantes.get(i)
+                    );
+
+            RolEnReserva rol =
+                    i == 0
+                            ? RolEnReserva.RESPONSABLE
+                            : RolEnReserva.INTEGRANTE;
+
+            crearAsociacionReservaUsuario(
+                    reserva,
+                    estudiante,
+                    rol,
+                    administrador,
+                    ahora
+            );
+        }
+
+        asegurarEstadoVigente(
+                reserva,
+                administrador,
+                ahora
+        );
+
+        System.out.println(
+                """
+    
+                ========================================
+                RESERVA R5 PREPARADA
+                Código: %s
+                Ambiente: %s
+                Inicio: %s
+                Fin: %s
+                Tolerancia: %d minutos
+                Integrantes: %d
+                ========================================
+                """.formatted(
+                        reserva.getCodigoReserva(),
+                        ambiente.getCodigo(),
+                        reserva.getFechaHoraInicio(),
+                        reserva.getFechaHoraFin(),
+                        reserva.getToleranciaMinutos(),
+                        dnisIntegrantes.size()
+                )
+        );
+
+        return reserva;
+    }
 
     private Reserva crearReserva(
             String codigoReserva,
