@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Historial de reservas</title>
+
+    <link rel="stylesheet"
+          th:href="@{/css/base.css}">
+
+    <link rel="stylesheet"
+          th:href="@{/css/componentes.css}">
+
+    <link rel="stylesheet"
+          th:href="@{/css/trazabilidad-reservas.css}">
+</head>
+
+<body>
+
+
+<div th:replace="~{fragments/menu-administrador :: barraSuperior}">
+</div>
+
+
+<main class="contenedor-principal">
+
+    <section class="fila-cabecera-pagina">
+
+        <div class="cabecera-pagina">
+
+            <h1>
+                Gestión de reservas de ambientes de estudio
+            </h1>
+
+            <p>
+                Consulta de trazabilidad e historial de reservas
+            </p>
+
+        </div>
+
+        <div th:replace="~{fragments/menu-administrador :: menuAdministrador}">
+        </div>
+
+    </section>
+
+
+    <section class="panel panel-filtros">
+
+        <div class="panel-titulo">
+            Criterios de búsqueda
+        </div>
+
+        <div class="panel-contenido">
+
+            <div class="filtros-trazabilidad">
+
+                <div class="campo-filtro">
+
+                    <label for="estudiante">
+                        Estudiante
+                    </label>
+
+                    <input
+                            id="estudiante"
+                            type="text"
+                            maxlength="150"
+                            autocomplete="off"
+                            placeholder="Nombre o apellido">
+
+                </div>
+
+
+                <div class="campo-filtro">
+
+                    <label for="codigoUniversitario">
+                        Código universitario
+                    </label>
+
+                    <input
+                            id="codigoUniversitario"
+                            type="text"
+                            maxlength="20"
+                            autocomplete="off"
+                            placeholder="Código universitario">
+
+                </div>
+
+
+                <div class="campo-filtro">
+
+                    <label for="dni">
+                        DNI
+                    </label>
+
+                    <input
+                            id="dni"
+                            type="text"
+                            maxlength="8"
+                            autocomplete="off"
+                            placeholder="DNI">
+
+                </div>
+
+
+                <div class="campo-filtro">
+
+                    <label for="estadoOcupacion">
+                        Estado de ocupación
+                    </label>
+
+                    <select id="estadoOcupacion">
+
+                        <option value="">
+                            Todos
+                        </option>
+
+                        <option value="PENDIENTE">
+                            Pendiente
+                        </option>
+
+                        <option value="OCUPADO">
+                            Ocupado
+                        </option>
+
+                        <option value="LIBERADO">
+                            Liberado
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="campo-filtro">
+
+                    <label for="fechaDesde">
+                        Fecha desde
+                    </label>
+
+                    <input
+                            id="fechaDesde"
+                            type="date">
+
+                </div>
+
+
+                <div class="campo-filtro">
+
+                    <label for="fechaHasta">
+                        Fecha hasta
+                    </label>
+
+                    <input
+                            id="fechaHasta"
+                            type="date">
+
+                </div>
+
+
+                <div class="campo-filtro">
+
+                    <label for="ubicacion">
+                        Ubicación
+                    </label>
+
+                    <select id="ubicacion">
+
+                        <option value="">
+                            Todas
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="campo-filtro">
+
+                    <label for="ambiente">
+                        Ambiente
+                    </label>
+
+                    <select
+                            id="ambiente"
+                            disabled>
+
+                        <option value="">
+                            Todos
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <div class="acciones-filtros">
+
+                <button
+                        id="botonBuscar"
+                        class="boton boton-primario"
+                        type="button">
+
+                    Buscar
+
+                </button>
+
+                <button
+                        id="botonLimpiar"
+                        class="boton boton-secundario"
+                        type="button">
+
+                    Limpiar
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <div id="mensaje"
+         class="mensaje"
+         hidden>
+    </div>
+
+
+    <section class="panel panel-resultados">
+
+        <div class="panel-titulo fila-titulo-resultados">
+
+            <span>
+                Reservas encontradas
+            </span>
+
+            <span id="cantidadResultados"
+                  class="cantidad-resultados">
+                0 resultados
+            </span>
+
+        </div>
+
+        <div class="contenedor-tabla">
+
+            <table class="tabla-reservas-historicas">
+
+                <thead>
+
+                <tr>
+
+                    <th>
+                        Código
+                    </th>
+
+                    <th>
+                        Fecha
+                    </th>
+
+                    <th>
+                        Horario
+                    </th>
+
+                    <th>
+                        Ubicación
+                    </th>
+
+                    <th>
+                        Ambiente
+                    </th>
+
+                    <th>
+                        Estado
+                    </th>
+
+                    <th>
+                        Acción
+                    </th>
+
+                </tr>
+
+                </thead>
+
+                <tbody id="cuerpoReservas">
+
+                <tr class="fila-sin-resultados">
+
+                    <td colspan="7">
+                        Utilice los criterios de búsqueda para consultar reservas.
+                    </td>
+
+                </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+
+    <section
+            id="panelHistorial"
+            class="panel panel-historial"
+            hidden>
+
+        <div class="panel-titulo">
+            Historial de la reserva
+        </div>
+
+        <div class="panel-contenido">
+
+            <div class="resumen-reserva">
+
+                <div class="dato-resumen">
+
+                    <span class="etiqueta-resumen">
+                        Código
+                    </span>
+
+                    <span id="detalleCodigoReserva">
+                        —
+                    </span>
+
+                </div>
+
+
+                <div class="dato-resumen">
+
+                    <span class="etiqueta-resumen">
+                        Fecha
+                    </span>
+
+                    <span id="detalleFechaReserva">
+                        —
+                    </span>
+
+                </div>
+
+
+                <div class="dato-resumen">
+
+                    <span class="etiqueta-resumen">
+                        Horario
+                    </span>
+
+                    <span id="detalleHorarioReserva">
+                        —
+                    </span>
+
+                </div>
+
+
+                <div class="dato-resumen">
+
+                    <span class="etiqueta-resumen">
+                        Ubicación
+                    </span>
+
+                    <span id="detalleUbicacionReserva">
+                        —
+                    </span>
+
+                </div>
+
+
+                <div class="dato-resumen">
+
+                    <span class="etiqueta-resumen">
+                        Ambiente
+                    </span>
+
+                    <span id="detalleAmbienteReserva">
+                        —
+                    </span>
+
+                </div>
+
+
+                <div class="dato-resumen">
+
+                    <span class="etiqueta-resumen">
+                        Estado actual
+                    </span>
+
+                    <span id="detalleEstadoReserva">
+                        —
+                    </span>
+
+                </div>
+
+
+                <div class="dato-resumen">
+
+                    <span class="etiqueta-resumen">
+                        Límite de tolerancia
+                    </span>
+
+                    <span id="detalleLimiteTolerancia">
+                        —
+                    </span>
+
+                </div>
+
+            </div>
+
+            <div class="seccion-integrantes">
+
+                <div class="subtitulo-historial">
+                    Estudiantes de la reserva
+                </div>
+
+                <div class="contenedor-tabla">
+
+                    <table class="tabla-integrantes">
+
+                        <thead>
+
+                        <tr>
+
+                            <th>
+                                Código universitario
+                            </th>
+
+                            <th>
+                                DNI
+                            </th>
+
+                            <th>
+                                Estudiante
+                            </th>
+
+                            <th>
+                                Rol
+                            </th>
+
+                            <th>
+                                Validación de ingreso
+                            </th>
+
+                        </tr>
+
+                        </thead>
+
+                        <tbody id="cuerpoIntegrantes">
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+            <div class="contenedor-tabla tabla-eventos-contenedor">
+
+                <table class="tabla-eventos">
+
+                    <thead>
+
+                    <tr>
+
+                        <th>
+                            Fecha
+                        </th>
+
+                        <th>
+                            Hora
+                        </th>
+
+                        <th>
+                            Tipo de evento
+                        </th>
+
+                        <th>
+                            Detalle
+                        </th>
+
+                    </tr>
+
+                    </thead>
+
+                    <tbody id="cuerpoEventos">
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            <div class="acciones-historial">
+
+                <button
+                        id="botonCerrarHistorial"
+                        class="boton boton-secundario"
+                        type="button">
+
+                    Cerrar historial
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<script src="/js/trazabilidad-reservas.js"
+        defer>
+</script>
+
+</body>
+</html>

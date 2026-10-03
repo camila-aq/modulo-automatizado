@@ -13,6 +13,8 @@ public record TrazabilidadReservaResponse(
 
         LocalDateTime fechaHoraLimiteTolerancia,
 
+        List<IntegranteReservaResponse> integrantes,
+
         List<EventoTrazabilidadResponse> eventos
 
 ) {

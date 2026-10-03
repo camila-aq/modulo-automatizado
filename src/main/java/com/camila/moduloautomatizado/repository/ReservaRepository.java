@@ -17,6 +17,7 @@ public interface ReservaRepository
             String codigoReserva
     );
 
+
     @Query("""
             SELECT r
             FROM Reserva r
@@ -37,15 +38,16 @@ public interface ReservaRepository
             LocalDateTime finDia
     );
 
+
     @Query("""
-        SELECT r
-        FROM Reserva r
-        JOIN FETCH r.ambiente a
-        JOIN FETCH a.ubicacion u
-        WHERE r.fechaHoraInicio <= :momento
-          AND r.fechaHoraFin > :momento
-        ORDER BY r.fechaHoraInicio ASC
-        """)
+            SELECT r
+            FROM Reserva r
+            JOIN FETCH r.ambiente a
+            JOIN FETCH a.ubicacion u
+            WHERE r.fechaHoraInicio <= :momento
+              AND r.fechaHoraFin > :momento
+            ORDER BY r.fechaHoraInicio ASC
+            """)
     List<Reserva> buscarReservasEnControl(
             @Param("momento")
             LocalDateTime momento

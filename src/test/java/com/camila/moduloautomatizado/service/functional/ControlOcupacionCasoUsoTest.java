@@ -141,8 +141,7 @@ class ControlOcupacionCasoUsoTest {
 
     private final List<Integer> reservasCreadas = new ArrayList<>();
 
-
-    @AfterEach
+    
     void limpiarDatosDePrueba() {
 
         TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
