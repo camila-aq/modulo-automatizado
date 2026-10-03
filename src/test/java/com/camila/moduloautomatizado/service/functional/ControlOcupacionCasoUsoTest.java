@@ -40,20 +40,17 @@ import com.camila.moduloautomatizado.repository.ValidacionIngresoRepository;
 
 import com.camila.moduloautomatizado.service.ControlOcupacionConsultaService;
 import com.camila.moduloautomatizado.service.ControlOcupacionOrquestadorService;
-import com.camila.moduloautomatizado.service.EnvioCorreoService;
 import com.camila.moduloautomatizado.service.TrazabilidadReservaService;
 
 import jakarta.persistence.EntityManager;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
@@ -69,15 +66,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-
 
 @SpringBootTest(
         properties = {
                 "app.test-base-data.enabled=true",
                 "app.integration-reservation-data.enabled=false",
-                "app.mail.enabled=false",
+                "app.mail.enabled=true",
                 "spring.jpa.show-sql=false"
         }
 )
@@ -144,24 +138,8 @@ class ControlOcupacionCasoUsoTest {
     @Autowired
     private EntityManager entityManager;
 
-    @MockitoBean
-    private EnvioCorreoService envioCorreoService;
-
 
     private final List<Integer> reservasCreadas = new ArrayList<>();
-
-
-    @BeforeEach
-    void prepararEnvioCorreoSimulado() {
-
-        when(envioCorreoService
-                .enviar(
-                        any(Reserva.class),
-                        any(Usuario.class),
-                        any(TipoCorreo.class)
-                ))
-                .thenReturn(true);
-    }
 
 
     @AfterEach
@@ -1085,7 +1063,8 @@ class ControlOcupacionCasoUsoTest {
         String codigoCaso = "CP-R5-CU08";
         String accion = "Ejecutar el control hasta producir el cambio de estado a OCUPADO.";
         String resultadoEsperado = "Resultado esperado: El módulo registra el estado OCUPADO, " +
-                "la comunicación OCUPACION_CONFIRMADA y conserva ambos eventos para trazabilidad.\n\n" +
+                "envía y registra la comunicación OCUPACION_CONFIRMADA y conserva ambos eventos " +
+                "para trazabilidad.\n\n" +
                 "Objetivo: Verificar la trazabilidad y comunicación asociadas a una ocupación confirmada.";
         String precondiciones = "No fue posible verificar las precondiciones.";
 
@@ -1106,7 +1085,7 @@ class ControlOcupacionCasoUsoTest {
                     Reserva: %s
                     Estado inicial: PENDIENTE
                     Cantidad mínima requerida alcanzada
-                    Transporte de correo simulado como exitoso
+                    Servicio de correo electrónico habilitado
                     """.formatted(
                             escenario.reserva().getCodigoReserva()
                     ).trim();
@@ -1178,7 +1157,7 @@ class ControlOcupacionCasoUsoTest {
             String resultadoReal =
                     """
                     Estado registrado: OCUPADO
-                    Comunicación registrada: OCUPACION_CONFIRMADA
+                    Correo enviado y comunicación registrada: OCUPACION_CONFIRMADA
                     Fecha de comunicación: %s
                     Los eventos fueron recuperados mediante la consulta de trazabilidad.
                     """.formatted(
@@ -1225,7 +1204,8 @@ class ControlOcupacionCasoUsoTest {
         String codigoCaso = "CP-R5-CU09";
         String accion = "Ejecutar el control al finalizar la tolerancia sin alcanzar la cantidad mínima.";
         String resultadoEsperado = "Resultado esperado: El módulo registra el estado LIBERADO, " +
-                "la comunicación LIBERACION_AUTOMATICA y conserva ambos eventos para trazabilidad.\n\n" +
+                "envía y registra la comunicación LIBERACION_AUTOMATICA y conserva ambos eventos " +
+                "para trazabilidad.\n\n" +
                 "Objetivo: Verificar la trazabilidad y comunicación asociadas a la liberación automática.";
         String precondiciones = "No fue posible verificar las precondiciones.";
 
@@ -1255,7 +1235,7 @@ class ControlOcupacionCasoUsoTest {
                     Estado inicial: PENDIENTE
                     Cantidad mínima requerida no alcanzada
                     Periodo de tolerancia finalizado
-                    Transporte de correo simulado como exitoso
+                    Servicio de correo electrónico habilitado
                     """.formatted(
                             escenario.reserva().getCodigoReserva()
                     ).trim();
@@ -1327,7 +1307,7 @@ class ControlOcupacionCasoUsoTest {
             String resultadoReal =
                     """
                     Estado registrado: LIBERADO
-                    Comunicación registrada: LIBERACION_AUTOMATICA
+                    Correo enviado y comunicación registrada: LIBERACION_AUTOMATICA
                     Fecha de comunicación: %s
                     Los eventos fueron recuperados mediante la consulta de trazabilidad.
                     """.formatted(
@@ -1666,6 +1646,8 @@ class ControlOcupacionCasoUsoTest {
                                                     )
                                             );
 
+                            ambiente.getUbicacion().getNombre();
+
                             assertEquals(
                                     3,
                                     ambiente.getCantidadMinima(),
@@ -1687,6 +1669,7 @@ class ControlOcupacionCasoUsoTest {
                             LocalDateTime inicio =
                                     fechaCreacion
                                             .plusDays(1)
+                                            .withMinute(0)
                                             .withSecond(0)
                                             .withNano(0);
 
