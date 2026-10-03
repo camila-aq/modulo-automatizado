@@ -286,6 +286,7 @@ public class TrazabilidadReservaService {
                 reserva.getCodigoReserva(),
                 estadoActual,
                 limiteTolerancia,
+                reserva.getAmbiente().getCantidadMinima(),
                 integrantes,
                 eventos
         );

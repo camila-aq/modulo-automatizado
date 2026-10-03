@@ -112,6 +112,11 @@ document.addEventListener("DOMContentLoaded", () => {
             "detalleLimiteTolerancia"
         );
 
+    const detalleCantidadMinima =
+        document.getElementById(
+            "detalleCantidadMinima"
+        );
+
     const cuerpoEventos =
         document.getElementById(
             "cuerpoEventos"
@@ -714,6 +719,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 ? formatearFechaHora(
                     trazabilidad.fechaHoraLimiteTolerancia
                 )
+                : "—";
+
+        detalleCantidadMinima.textContent =
+            trazabilidad.cantidadMinimaRequerida != null
+                ? trazabilidad.cantidadMinimaRequerida
                 : "—";
 
         mostrarIntegrantes(
