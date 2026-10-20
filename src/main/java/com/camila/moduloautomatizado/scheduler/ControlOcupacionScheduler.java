@@ -6,11 +6,17 @@ import com.camila.moduloautomatizado.service.ControlOcupacionOrquestadorService;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
+@ConditionalOnProperty(
+        name = "app.r4-mode.enabled",
+        havingValue = "false",
+        matchIfMissing = true
+)
 public class ControlOcupacionScheduler {
 
     private final ReservaRepository reservaRepository;

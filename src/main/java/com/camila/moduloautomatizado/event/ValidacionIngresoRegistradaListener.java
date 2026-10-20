@@ -9,8 +9,14 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 @Component
+@ConditionalOnProperty(
+        name = "app.r4-mode.enabled",
+        havingValue = "false",
+        matchIfMissing = true
+)
 public class ValidacionIngresoRegistradaListener {
 
     private final ReservaRepository reservaRepository;
