@@ -7,6 +7,7 @@ public record AmbienteReservaResponse(
         String abreviatura,
         String piso,
         Integer cantidadMinima,
-        Integer cantidadMaxima
+        Integer cantidadMaxima,
+        String codigoPunto
 ) {
 }

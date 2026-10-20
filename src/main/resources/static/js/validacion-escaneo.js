@@ -60,6 +60,11 @@ document.addEventListener("DOMContentLoaded", () => {
             "mensajeEscaneo"
         );
 
+    const resultadoNombre =
+        document.getElementById(
+            "resultadoNombre"
+        );
+
 
     codigoPunto.addEventListener(
         "input",
@@ -146,6 +151,36 @@ document.addEventListener("DOMContentLoaded", () => {
             !dniValido;
     }
 
+    async function obtenerNombreUsuario(
+        dni
+    ) {
+
+        try {
+
+            const parametros =
+                new URLSearchParams({
+                    tipo: "DNI",
+                    valor: dni
+                });
+
+            const respuesta =
+                await fetch(
+                    "/api/validaciones-ingreso/manual/identificar?"
+                    + parametros.toString()
+                );
+
+            if (!respuesta.ok) {
+                return "—";
+            }
+
+            const usuario = await respuesta.json();
+
+            return `${usuario.nombres} ${usuario.apellidos}`;
+
+        } catch (error) {
+            return "—";
+        }
+    }
 
     async function ejecutarEscaneo() {
 
@@ -154,6 +189,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const punto =
             codigoPunto.value.trim();
+
+        const nombre =
+            await obtenerNombreUsuario(dni);
 
 
         botonEscanear.disabled =
@@ -206,6 +244,9 @@ document.addEventListener("DOMContentLoaded", () => {
             resultadoDni.textContent =
                 dni;
 
+            resultadoNombre.textContent =
+                nombre;
+
             resultadoIdValidacion.textContent =
                 datos.idValidacion;
 
@@ -230,11 +271,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 "exito"
             );
 
-
-            /*
-             * Dejamos el punto configurado
-             * para permitir el siguiente escaneo.
-             */
             dniEscaneado.value =
                 "";
 
@@ -247,6 +283,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
             resultadoDni.textContent =
                 dni;
+
+            resultadoNombre.textContent =
+                nombre;
 
             resultadoIdValidacion.textContent =
                 "—";

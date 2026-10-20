@@ -67,7 +67,9 @@ public class ReservasIntegracionTestInitializer {
         // crearBloqueIntegracion05();
         // crearBloqueIntegracion06();
         // crearBloqueIntegracion07();
-        crearBloqueIntegracion08();
+        // crearBloqueIntegracion08();
+        // crearBloqueIntegracion09();
+        crearBloqueIntegracion10();
     }
 
 
@@ -330,6 +332,209 @@ public class ReservasIntegracionTestInitializer {
                 ),
                 inicioBase.plusHours(2)
         );
+    }
+
+    private void crearBloqueIntegracion09() {
+
+        LocalDateTime ahora =
+                LocalDateTime.now();
+
+        LocalDateTime inicioBase =
+                ahora
+                        .withMinute(0)
+                        .withSecond(0)
+                        .withNano(0);
+
+
+        if (ahora.getMinute() >= 30) {
+
+            inicioBase =
+                    inicioBase.plusHours(1);
+        }
+
+
+        /*
+         * SIMULACIÓN R5
+         *
+         * RES-SIM-OCU-001:
+         * Validar primero dos integrantes para observar
+         * el estado PENDIENTE.
+         *
+         * Luego validar al tercer integrante para generar
+         * el cambio automático a OCUPADO y el correo
+         * de confirmación.
+         */
+        crearReservaProgramada(
+                "RES-SIM-OCU-001",
+                "CCSS-AMB-011",
+                List.of(
+                        "10000019",
+                        "10000020",
+                        "10000021"
+                ),
+                inicioBase
+        );
+
+
+        /*
+         * RES-SIM-LIB-001:
+         * No completar la cantidad mínima.
+         *
+         * Puede validarse uno o dos integrantes y esperar
+         * el fin de la tolerancia para observar el cambio
+         * automático a LIBERADO y el correo asociado.
+         */
+        crearReservaProgramada(
+                "RES-SIM-LIB-001",
+                "CIA-AMB-019",
+                List.of(
+                        "10000022",
+                        "10000023",
+                        "10000024"
+                ),
+                inicioBase
+        );
+    }
+
+    private void crearBloqueIntegracion10() {
+
+        LocalDateTime inicio =
+                LocalDateTime.now()
+                        .withHour(17)
+                        .withMinute(0)
+                        .withSecond(0)
+                        .withNano(0);
+
+        LocalDateTime fin =
+                inicio.plusHours(2);
+
+
+        crearReservaProgramada(
+                "RES-R5-OCC-010",
+                "CCSS-AMB-011",
+                List.of(
+                        "10000028",
+                        "10000029",
+                        "10000030"
+                ),
+                inicio,
+                fin
+        );
+
+
+        crearReservaProgramada(
+                "RES-R5-LIB-010",
+                "CIA-AMB-019",
+                List.of(
+                        "10000001",
+                        "10000002",
+                        "10000003"
+                ),
+                inicio,
+                fin
+        );
+    }
+
+    private Reserva crearReservaProgramada(
+            String codigoReserva,
+            String codigoAmbiente,
+            List<String> dnisIntegrantes,
+            LocalDateTime inicio,
+            LocalDateTime fin) {
+
+        LocalDateTime ahora = LocalDateTime.now();
+
+        Ambiente ambiente =
+                obtenerAmbiente(codigoAmbiente);
+
+        validarCantidadIntegrantes(
+                ambiente,
+                dnisIntegrantes.size()
+        );
+
+        Usuario administrador =
+                obtenerUsuario("00000001");
+
+        Reserva reserva =
+                reservaRepository
+                        .findByCodigoReserva(codigoReserva)
+                        .orElseGet(() -> {
+
+                            Reserva nuevaReserva =
+                                    new Reserva();
+
+                            nuevaReserva.setCodigoReserva(codigoReserva);
+                            nuevaReserva.setFechaCreacion(ahora);
+                            nuevaReserva.setUsuarioCreacion(administrador);
+
+                            return nuevaReserva;
+                        });
+
+        reserva.setAmbiente(ambiente);
+
+        reserva.setFechaHoraInicio(inicio);
+        reserva.setFechaHoraFin(fin);
+
+        reserva.setToleranciaMinutos(
+                ReglasControlOcupacion.MINUTOS_TOLERANCIA
+        );
+
+        reserva =
+                reservaRepository.save(reserva);
+
+
+        for (int i = 0; i < dnisIntegrantes.size(); i++) {
+
+            Usuario estudiante =
+                    obtenerUsuario(
+                            dnisIntegrantes.get(i)
+                    );
+
+            RolEnReserva rol =
+                    i == 0
+                            ? RolEnReserva.RESPONSABLE
+                            : RolEnReserva.INTEGRANTE;
+
+            crearAsociacionReservaUsuario(
+                    reserva,
+                    estudiante,
+                    rol,
+                    administrador,
+                    ahora
+            );
+        }
+
+
+        asegurarEstadoVigente(
+                reserva,
+                administrador,
+                ahora
+        );
+
+
+        System.out.println(
+                """
+    
+                ========================================
+                RESERVA R5 PREPARADA
+                Código: %s
+                Ambiente: %s
+                Inicio: %s
+                Fin: %s
+                Tolerancia: %d minutos
+                Integrantes: %d
+                ========================================
+                """.formatted(
+                        reserva.getCodigoReserva(),
+                        ambiente.getCodigo(),
+                        reserva.getFechaHoraInicio(),
+                        reserva.getFechaHoraFin(),
+                        reserva.getToleranciaMinutos(),
+                        dnisIntegrantes.size()
+                )
+        );
+
+        return reserva;
     }
 
     private Reserva crearReservaProgramada(

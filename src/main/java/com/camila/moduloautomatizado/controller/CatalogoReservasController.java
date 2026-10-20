@@ -5,6 +5,7 @@ import com.camila.moduloautomatizado.dto.UbicacionReservaResponse;
 import com.camila.moduloautomatizado.model.entity.Ubicacion;
 import com.camila.moduloautomatizado.repository.AmbienteRepository;
 import com.camila.moduloautomatizado.repository.UbicacionRepository;
+import com.camila.moduloautomatizado.repository.PuntoValidacionRepository;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,13 +20,15 @@ public class CatalogoReservasController {
 
     private final UbicacionRepository ubicacionRepository;
     private final AmbienteRepository ambienteRepository;
+    private final PuntoValidacionRepository puntoValidacionRepository;
 
     public CatalogoReservasController(
             UbicacionRepository ubicacionRepository,
-            AmbienteRepository ambienteRepository) {
+            AmbienteRepository ambienteRepository, PuntoValidacionRepository puntoValidacionRepository) {
 
         this.ubicacionRepository = ubicacionRepository;
         this.ambienteRepository = ambienteRepository;
+        this.puntoValidacionRepository = puntoValidacionRepository;
     }
 
     @GetMapping("/ubicaciones")
@@ -61,17 +64,31 @@ public class CatalogoReservasController {
                         ubicacion
                 )
                 .stream()
-                .map(ambiente ->
-                        new AmbienteReservaResponse(
-                                ambiente.getIdAmbiente(),
-                                ambiente.getCodigo(),
-                                ambiente.getNombre(),
-                                ambiente.getAbreviatura(),
-                                ambiente.getPiso(),
-                                ambiente.getCantidadMinima(),
-                                ambiente.getCantidadMaxima()
-                        )
-                )
+                .map(ambiente -> {
+
+                    String codigoPunto =
+                            puntoValidacionRepository
+                                    .findByAmbienteAndActivoTrue(
+                                            ambiente
+                                    )
+                                    .map(punto ->
+                                            punto.getCodigoPunto()
+                                    )
+                                    .orElse(
+                                            "Sin punto activo"
+                                    );
+
+                    return new AmbienteReservaResponse(
+                            ambiente.getIdAmbiente(),
+                            ambiente.getCodigo(),
+                            ambiente.getNombre(),
+                            ambiente.getAbreviatura(),
+                            ambiente.getPiso(),
+                            ambiente.getCantidadMinima(),
+                            ambiente.getCantidadMaxima(),
+                            codigoPunto
+                    );
+                })
                 .toList();
     }
 }

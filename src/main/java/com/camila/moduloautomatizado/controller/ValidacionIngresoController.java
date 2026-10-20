@@ -244,7 +244,7 @@ public class ValidacionIngresoController {
 
         ReservaUsuario reservaUsuario =
                 validacionIngresoService
-                        .buscarReservaVigenteParaValidacionManual(
+                        .buscarReservaParaConsultaManual(
                                 usuario,
                                 idUbicacion
                         );

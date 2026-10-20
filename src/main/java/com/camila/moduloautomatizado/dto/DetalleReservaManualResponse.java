@@ -14,6 +14,7 @@ public record DetalleReservaManualResponse(
         LocalDateTime fechaHoraInicio,
         LocalDateTime fechaHoraFin,
         LocalDateTime fechaHoraRegistro,
-        List<IntegranteReservaResponse> integrantes
+        List<IntegranteReservaResponse> integrantes,
+        boolean vigente
 ) {
 }

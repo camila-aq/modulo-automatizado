@@ -82,6 +82,8 @@ document.addEventListener("DOMContentLoaded", () => {
     let ambientesCargados = [];
     let reservasCargadas = [];
     let temporizadorIdentificacion;
+    let temporizadorMensaje;
+    let manejadorClickMensaje;
     let actualizandoGrillaAutomaticamente = false;
 
 
@@ -517,27 +519,73 @@ document.addEventListener("DOMContentLoaded", () => {
         tipo
     ) {
 
-        mensaje.textContent =
-            texto;
+        clearTimeout(temporizadorMensaje);
 
-        mensaje.className =
-            `mensaje mensaje-${tipo}`;
+        if (manejadorClickMensaje) {
 
-        mensaje.hidden =
-            false;
+            document.removeEventListener(
+                "click",
+                manejadorClickMensaje
+            );
+
+            manejadorClickMensaje = null;
+        }
+
+        mensaje.textContent = texto;
+        mensaje.className = `mensaje mensaje-${tipo}`;
+        mensaje.hidden = false;
+
+        temporizadorMensaje =
+            setTimeout(
+                ocultarMensaje,
+                10000
+            );
+
+        setTimeout(
+            () => {
+
+                if (mensaje.hidden) {
+                    return;
+                }
+
+                manejadorClickMensaje =
+                    () => {
+
+                        ocultarMensaje();
+                    };
+
+                document.addEventListener(
+                    "click",
+                    manejadorClickMensaje,
+                    {
+                        once: true
+                    }
+                );
+            },
+            0
+        );
     }
 
 
     function ocultarMensaje() {
 
-        mensaje.textContent =
-            "";
+        clearTimeout(temporizadorMensaje);
 
-        mensaje.className =
-            "mensaje";
+        temporizadorMensaje = null;
 
-        mensaje.hidden =
-            true;
+        if (manejadorClickMensaje) {
+
+            document.removeEventListener(
+                "click",
+                manejadorClickMensaje
+            );
+
+            manejadorClickMensaje = null;
+        }
+
+        mensaje.textContent = "";
+        mensaje.className = "mensaje";
+        mensaje.hidden = true;
     }
 
 
@@ -618,7 +666,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 datos
             );
 
-            ocultarMensaje();
+            if (datos.vigente) {
+                botonValidarIngreso.disabled = false;
+                ocultarMensaje();
+
+            } else {
+
+                botonValidarIngreso.disabled = true;
+                mostrarMensaje(
+                    "La reserva se encuentra fuera de vigencia.",
+                    "error"
+                );
+            }
 
         } catch (error) {
 
@@ -1029,19 +1088,13 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
 
-            const ambientes =
-                await respuestaAmbientes.json();
+            const ambientes = await respuestaAmbientes.json();
 
-            const reservas =
-                await respuestaReservas.json();
+            const reservas = await respuestaReservas.json();
 
+            ambientesCargados = ambientes;
 
-            ambientesCargados =
-                ambientes;
-
-            reservasCargadas =
-                reservas;
-
+            reservasCargadas = reservas;
 
             construirGrilla(
                 ambientes,
@@ -1130,6 +1183,11 @@ document.addEventListener("DOMContentLoaded", () => {
                         <strong>Máx.</strong>
                         ${ambiente.cantidadMaxima}
                         personas
+                        
+                        <br><br>
+
+                        <strong>Punto de validación:</strong>
+                        ${ambiente.codigoPunto}
 
                     </div>
                 `;

@@ -22,6 +22,9 @@ import java.time.LocalDateTime;
 
 import java.util.Objects;
 import java.util.List;
+import java.time.Duration;
+import java.util.Comparator;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.context.ApplicationEventPublisher;
@@ -187,6 +190,73 @@ public class ValidacionIngresoService {
     }
 
     @Transactional(readOnly = true)
+    public ReservaUsuario buscarReservaParaConsultaManual(
+            Usuario usuario,
+            Integer idUbicacion) {
+
+        if (idUbicacion == null) {
+            throw new IllegalArgumentException(
+                    "La ubicación es obligatoria para buscar la reserva."
+            );
+        }
+
+        List<ReservaUsuario> asociaciones =
+                reservaUsuarioRepository
+                        .findByUsuarioAndActivoTrue(usuario);
+
+        if (asociaciones.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "El usuario no se encuentra asociado a ninguna reserva."
+            );
+        }
+
+        List<ReservaUsuario> asociacionesUbicacion =
+                asociaciones.stream()
+                        .filter(reservaUsuario ->
+                                reservaCorrespondeAUbicacion(
+                                        reservaUsuario,
+                                        idUbicacion
+                                )
+                        )
+                        .toList();
+
+        if (asociacionesUbicacion.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "El usuario no se encuentra asociado a ninguna reserva en la ubicación seleccionada."
+            );
+        }
+
+        LocalDateTime momento =
+                LocalDateTime.now();
+
+        return asociacionesUbicacion.stream()
+                .filter(reservaUsuario ->
+                        reservaEstaVigente(
+                                reservaUsuario,
+                                momento
+                        )
+                )
+                .findFirst()
+                .orElseGet(() ->
+                        asociacionesUbicacion.stream()
+                                .min(
+                                        Comparator.comparingLong(
+                                                reservaUsuario ->
+                                                        distanciaAReservaEnMinutos(
+                                                                reservaUsuario.getReserva(),
+                                                                momento
+                                                        )
+                                        )
+                                )
+                                .orElseThrow(() ->
+                                        new IllegalArgumentException(
+                                                "No fue posible localizar una reserva del usuario."
+                                        )
+                                )
+                );
+    }
+
+    @Transactional(readOnly = true)
     public DetalleReservaManualResponse obtenerDetalleReservaManual(
             ReservaUsuario reservaUsuarioBuscado) {
 
@@ -239,7 +309,11 @@ public class ValidacionIngresoService {
                 reserva.getFechaHoraInicio(),
                 reserva.getFechaHoraFin(),
                 reserva.getFechaCreacion(),
-                integrantesResponse
+                integrantesResponse,
+                reservaEstaVigente(
+                        reservaUsuarioGestionado,
+                        LocalDateTime.now()
+                )
         );
     }
 
@@ -417,5 +491,25 @@ public class ValidacionIngresoService {
                 );
     }
 
+    private long distanciaAReservaEnMinutos(
+            Reserva reserva,
+            LocalDateTime momento) {
+
+        if (momento.isBefore( reserva.getFechaHoraInicio() )) {
+            return Duration.between(
+                    momento,
+                    reserva.getFechaHoraInicio()
+            ).toMinutes();
+        }
+
+        if (!momento.isBefore( reserva.getFechaHoraFin() )) {
+            return Duration.between(
+                    reserva.getFechaHoraFin(),
+                    momento
+            ).toMinutes();
+        }
+
+        return 0;
+    }
 
 }

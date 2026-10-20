@@ -957,7 +957,8 @@ class ValidacionIngresoControllerTest {
                                         RolEnReserva.INTEGRANTE,
                                         true
                                 )
-                        )
+                        ),
+                        true
                 );
 
 
