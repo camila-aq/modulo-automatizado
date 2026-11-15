@@ -1,15 +1,21 @@
+
 package com.camila.moduloautomatizado.event;
 
 import com.camila.moduloautomatizado.model.entity.Reserva;
 import com.camila.moduloautomatizado.repository.ReservaRepository;
 import com.camila.moduloautomatizado.service.ControlOcupacionOrquestadorService;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 @Component
 @ConditionalOnProperty(
@@ -19,23 +25,29 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 )
 public class ValidacionIngresoRegistradaListener {
 
+    private static final Logger logger =
+            LoggerFactory.getLogger(
+                    ValidacionIngresoRegistradaListener.class
+            );
+
     private final ReservaRepository reservaRepository;
 
     private final ControlOcupacionOrquestadorService controlOcupacionOrquestadorService;
 
-
     public ValidacionIngresoRegistradaListener(
             ReservaRepository reservaRepository,
-            ControlOcupacionOrquestadorService controlOcupacionOrquestadorService) {
+            ControlOcupacionOrquestadorService
+                    controlOcupacionOrquestadorService) {
 
         this.reservaRepository = reservaRepository;
         this.controlOcupacionOrquestadorService = controlOcupacionOrquestadorService;
     }
 
-
+    @Async("controlOcupacionExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void procesarValidacionRegistrada(ValidacionIngresoRegistradaEvent evento) {
+    public void procesarValidacionRegistrada(
+            ValidacionIngresoRegistradaEvent evento) {
 
         try {
 
@@ -48,13 +60,20 @@ public class ValidacionIngresoRegistradaListener {
                                     )
                             );
 
-            controlOcupacionOrquestadorService.procesarReserva(reserva,evento.getMomento());
+            controlOcupacionOrquestadorService
+                    .procesarReserva(
+                            reserva,
+                            evento.getMomento()
+                    );
 
         } catch (RuntimeException ex) {
 
-            System.err.println(
+            logger.error(
                     "No se pudo ejecutar el control automático "
-                    + "después de la validación: " + ex.getMessage()
+                            + "después de la validación "
+                            + "para la reserva ID {}",
+                    evento.getIdReserva(),
+                    ex
             );
         }
     }
